@@ -180,14 +180,15 @@ def spell_icon_url(spell_id: int) -> str | None:
 
 def rune_icon_url(perk_id: int | None) -> str | None:
     """
-    개별 룬(perk) 아이콘. Data Dragon의 runesReforged.json 캐시에 없는
-    룬(예: 예전 패치에만 존재했던 룬)도 항상 아이콘이 나오도록, 캐시 조회
-    대신 Community Dragon의 숫자 ID 기반 경로를 바로 사용한다 (champion_icon_url과
-    같은 방식 — 버전 관리가 필요 없어 항상 최신 자산을 가리킨다).
+    개별 룬(perk) 아이콘. Data Dragon의 runesReforged.json 캐시 기반 —
+    Community Dragon의 숫자 ID 경로를 시도했다가 실제로는 잘못된 주소라
+    깨진 이미지만 나와서(검증 없이 추측한 경로였음), 검증된 방식으로 되돌렸다.
+    캐시에 없는 룬 ID는 None을 반환한다(예: 서로 다른 룬트리의 슬롯이 뒤섞여
+    집계되면서 흔치 않은 조합이 섞였을 가능성 등).
     """
-    if not perk_id:
+    if not perk_id or not _RUNE_ICON_CACHE:
         return None
-    return f"https://cdn.communitydragon.org/latest/perk/{perk_id}"
+    return _RUNE_ICON_CACHE.get(perk_id)
 
 
 # 5개 룬트리는 몇 년째 안 바뀌는 고정값이라, 캐시 조회가 실패해도 항상
