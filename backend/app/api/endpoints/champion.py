@@ -78,7 +78,13 @@ async def get_champion_build(
     champion_id: int,
     position: str | None = Query(default=None, description="TOP/JUNGLE/MIDDLE/BOTTOM/UTILITY"),
     queue_ids: str | None = Query(
-        default=None, description="쉼표로 구분된 queue id 목록 (예: 420,440 = 솔로+자유랭크)"
+        default=None, description="쉼표로 구분된 queue id 목록 (예: 420 = 솔로랭크, 440 = 자유랭크)"
+    ),
+    min_tier: str | None = Query(
+        default=None,
+        description="이 티어 이상인 참가자만 집계 (예: GOLD). IRON/BRONZE/SILVER/GOLD/"
+        "PLATINUM/EMERALD/DIAMOND/MASTER 중 하나. 현재 캐싱된 티어 기준이라 "
+        "매치 당시 티어와 다를 수 있음.",
     ),
     db: AsyncSession = Depends(get_db),
 ):
@@ -94,7 +100,13 @@ async def get_champion_build(
         except ValueError:
             raise HTTPException(400, "queue_ids는 쉼표로 구분된 숫자여야 합니다")
 
-    build = await crud_champion.get_champion_build(db, champion_id, position, parsed_queue_ids)
+    try:
+        build = await crud_champion.get_champion_build(
+            db, champion_id, position, parsed_queue_ids, min_tier
+        )
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
+
     if build is None:
         raise HTTPException(404, "아직 이 챔피언의 매치 데이터가 없습니다")
     return build

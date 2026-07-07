@@ -16,6 +16,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.crud_match import get_match_by_id
+from app.crud.crud_summoner import get_by_puuid
 from app.models.match import Match, MatchParticipant
 from app.services import riot_api
 
@@ -155,11 +156,18 @@ async def save_match_if_new(db: AsyncSession, match_id: str) -> Match:
     for p in info["participants"]:
         pdata = _parse_participant(p)
         tl = timelines.get(pdata["puuid"], {"skill_order": [], "item_timeline": []})
+
+        # 추가 API 호출 없이, 이미 캐싱되어 있는 소환사라면 "지금 시점" 티어를
+        # 이 매치 기록에 고정해서 남긴다. 캐싱된 게 없으면 None으로 남는다.
+        cached_summoner = await get_by_puuid(db, pdata["puuid"])
+        tier_at_sync = cached_summoner.solo_tier if cached_summoner else None
+
         match.participants.append(
             MatchParticipant(
                 **pdata,
                 skill_order=tl["skill_order"],
                 item_timeline=tl["item_timeline"],
+                tier_at_sync=tier_at_sync,
             )
         )
 

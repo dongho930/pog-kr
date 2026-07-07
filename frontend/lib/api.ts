@@ -112,22 +112,32 @@ export interface ParticipantRank {
   level: number | null;
 }
 
+export interface ChampionBuildStat {
+  item_ids: (number | string)[];
+  games: number;
+  win_rate: number;
+  pick_rate: number;
+  icon_url?: string | null;
+  icon_urls?: (string | null)[] | null;
+  primary_style_icon_url?: string | null;
+  sub_style_icon_url?: string | null;
+}
+
 export interface ChampionBuild {
   champion_id: number;
   champion_name: string;
   champion_icon_url: string;
   games: number;
   win_rate: number;
-  core_item_icon_urls: (string | null)[];
-  boots_icon_url: string | null;
-  trinket_icon_url: string | null;
-  keystone_icon_url: string | null;
-  primary_style_icon_url: string | null;
-  sub_style_icon_url: string | null;
-  primary_minor_rune_icon_urls: (string | null)[];
-  secondary_rune_icon_urls: (string | null)[];
-  spell_icon_urls: (string | null)[];
-  skill_priority: string[];
+  rune_page_stats: ChampionBuildStat[];
+  keystone_stats: ChampionBuildStat[];
+  secondary_rune_stats: ChampionBuildStat[];
+  spell_stats: ChampionBuildStat[];
+  skill_order_stats: ChampionBuildStat[];
+  full_skill_order: (string | null)[];
+  boots_stats: ChampionBuildStat[];
+  trinket_stats: ChampionBuildStat[];
+  core_item_stats: ChampionBuildStat[];
 }
 
 export interface LeaderboardEntry {
@@ -193,10 +203,15 @@ export const api = {
     ),
   getLeaderboard: (tier: string, queue: string, limit = 50) =>
     apiFetch<LeaderboardEntry[]>(`/leaderboard?tier=${tier}&queue=${queue}&limit=${limit}`),
-  getChampionBuild: (championId: number, position?: string, queueIds?: number[]) =>
-    apiFetch<ChampionBuild>(
-      `/champions/${championId}/build?${position ? `position=${position}&` : ""}${
-        queueIds && queueIds.length ? `queue_ids=${queueIds.join(",")}` : ""
-      }`
-    ),
+  getChampionBuild: (
+    championId: number,
+    options?: { position?: string; queueIds?: number[]; minTier?: string }
+  ) => {
+    const params = new URLSearchParams();
+    if (options?.position) params.set("position", options.position);
+    if (options?.queueIds?.length) params.set("queue_ids", options.queueIds.join(","));
+    if (options?.minTier) params.set("min_tier", options.minTier);
+    const qs = params.toString();
+    return apiFetch<ChampionBuild>(`/champions/${championId}/build${qs ? `?${qs}` : ""}`);
+  },
 };

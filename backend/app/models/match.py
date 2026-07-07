@@ -47,6 +47,12 @@ class MatchParticipant(Base):
 
     game_name: Mapped[str] = mapped_column(String(50), default="")
     tag_line: Mapped[str] = mapped_column(String(10), default="")
+    # 이 매치를 DB에 처음 저장한 시점에, 그때 캐싱되어 있던 solo_tier를
+    # "고정"해서 기록한다 (이후 그 소환사의 랭크가 바뀌어도 이 값은 안 바뀜).
+    # 매치 당시의 진짜 티어는 아니지만("Riot API가 과거 티어를 안 줌"),
+    # 매번 현재 티어로 조회하는 것보다는 실제 플레이 시점에 훨씬 가깝다.
+    # 캐싱된 소환사 정보가 없으면 None으로 남는다(추가 API 호출 없음).
+    tier_at_sync: Mapped[str | None] = mapped_column(String(20), nullable=True)
 
     kills: Mapped[int] = mapped_column(Integer, default=0)
     deaths: Mapped[int] = mapped_column(Integer, default=0)
