@@ -60,16 +60,17 @@ export function StatSection({
   renderLabel,
 }: {
   title: string;
-  stats: ChampionBuildStat[];
+  stats?: ChampionBuildStat[];
   renderIcons: (stat: ChampionBuildStat) => React.ReactNode;
   renderLabel?: (stat: ChampionBuildStat) => string | undefined;
 }) {
-  if (stats.length === 0) return null;
+  const list = stats ?? [];
+  if (list.length === 0) return null;
   return (
     <section>
       <h2 className="mb-2 text-sm font-semibold text-text-muted">{title}</h2>
       <div className="space-y-1.5">
-        {stats.map((stat, i) => (
+        {list.map((stat, i) => (
           <StatRow key={i} stat={stat} icons={renderIcons(stat)} label={renderLabel?.(stat)} />
         ))}
       </div>

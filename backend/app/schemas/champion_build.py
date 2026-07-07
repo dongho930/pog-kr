@@ -23,6 +23,9 @@ class ChampionBuildOut(BaseModel):
 
     rune_page_stats: list[StatEntry]
     keystone_stats: list[StatEntry]
+    primary_slot1_stats: list[StatEntry]
+    primary_slot2_stats: list[StatEntry]
+    primary_slot3_stats: list[StatEntry]
     secondary_rune_stats: list[StatEntry]
     spell_stats: list[StatEntry]
     skill_order_stats: list[StatEntry]

@@ -1,7 +1,8 @@
 const SKILLS = ["Q", "W", "E", "R"] as const;
 
-export function SkillBuildGrid({ fullSkillOrder }: { fullSkillOrder: (string | null)[] }) {
-  const hasData = fullSkillOrder.some((s) => s !== null);
+export function SkillBuildGrid({ fullSkillOrder }: { fullSkillOrder?: (string | null)[] }) {
+  const order = fullSkillOrder ?? [];
+  const hasData = order.some((s) => s !== null);
   if (!hasData) {
     return <p className="text-sm text-text-muted">데이터가 부족합니다.</p>;
   }
@@ -14,7 +15,7 @@ export function SkillBuildGrid({ fullSkillOrder }: { fullSkillOrder: (string | n
             <div className="flex items-center justify-center font-display text-sm font-bold text-accent-gold">
               {skill}
             </div>
-            {fullSkillOrder.map((chosen, levelIdx) => {
+            {order.map((chosen, levelIdx) => {
               const level = levelIdx + 1;
               const isThisSkill = chosen === skill;
               return (

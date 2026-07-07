@@ -24,15 +24,22 @@ const QUEUE_OPTIONS = [
 ];
 
 const TIER_OPTIONS = [
-  { key: "ALL", label: "전체" },
-  { key: "IRON", label: "아이언 이상" },
-  { key: "BRONZE", label: "브론즈 이상" },
-  { key: "SILVER", label: "실버 이상" },
-  { key: "GOLD", label: "골드 이상" },
-  { key: "PLATINUM", label: "플래티넘 이상" },
-  { key: "EMERALD", label: "에메랄드 이상" },
-  { key: "DIAMOND", label: "다이아몬드 이상" },
-  { key: "MASTER", label: "마스터 이상" },
+  { key: "ALL", label: "전체 티어" },
+  { key: "CHALLENGER", label: "챌린저" },
+  { key: "GRANDMASTER", label: "그랜드마스터" },
+  { key: "MASTER_PLUS", label: "마스터+" },
+  { key: "MASTER", label: "마스터" },
+  { key: "DIAMOND_PLUS", label: "다이아몬드+" },
+  { key: "DIAMOND", label: "다이아몬드" },
+  { key: "EMERALD_PLUS", label: "에메랄드+" },
+  { key: "EMERALD", label: "에메랄드" },
+  { key: "PLATINUM_PLUS", label: "플래티넘+" },
+  { key: "PLATINUM", label: "플래티넘" },
+  { key: "GOLD_PLUS", label: "골드+" },
+  { key: "GOLD", label: "골드" },
+  { key: "SILVER", label: "실버" },
+  { key: "BRONZE", label: "브론즈" },
+  { key: "IRON", label: "아이언" },
 ];
 
 export function ChampionBuildSection({
@@ -44,6 +51,7 @@ export function ChampionBuildSection({
 }) {
   const [queueKey, setQueueKey] = useState("ALL");
   const [tierKey, setTierKey] = useState("ALL");
+  const [tierOpen, setTierOpen] = useState(false);
   const [build, setBuild] = useState<ChampionBuild>(initialBuild);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,7 +69,7 @@ export function ChampionBuildSection({
     api
       .getChampionBuild(championId, {
         queueIds: queue?.queueIds,
-        minTier: tierKey === "ALL" ? undefined : tierKey,
+        tier: tierKey === "ALL" ? undefined : tierKey,
       })
       .then((data) => {
         if (!cancelled) setBuild(data);
@@ -96,21 +104,37 @@ export function ChampionBuildSection({
         ))}
       </div>
 
-      {/* 티어 선택 */}
-      <div className="mb-6 flex flex-wrap gap-1">
-        {TIER_OPTIONS.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTierKey(t.key)}
-            className={`rounded-full px-2.5 py-1 text-xs font-medium transition ${
-              tierKey === t.key
-                ? "bg-base-elevated text-text-primary"
-                : "bg-base-surface text-text-faint hover:text-text-primary"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+      {/* 티어 선택 (드롭다운) */}
+      <div className="relative mb-6 inline-block">
+        <button
+          onClick={() => setTierOpen((v) => !v)}
+          className="flex items-center gap-2 rounded-md border border-base-border bg-base-surface px-3 py-1.5 text-sm font-semibold text-text-primary"
+        >
+          {TIER_OPTIONS.find((t) => t.key === tierKey)?.label}
+          <span className={`text-text-faint transition-transform ${tierOpen ? "rotate-180" : ""}`}>
+            ▾
+          </span>
+        </button>
+        {tierOpen && (
+          <div className="absolute z-10 mt-1 max-h-80 w-48 overflow-y-auto rounded-md border border-base-border bg-base-surface shadow-lg">
+            {TIER_OPTIONS.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => {
+                  setTierKey(t.key);
+                  setTierOpen(false);
+                }}
+                className={`block w-full px-3 py-2 text-left text-sm transition ${
+                  tierKey === t.key
+                    ? "bg-base-elevated text-accent-gold"
+                    : "text-text-muted hover:bg-base-elevated hover:text-text-primary"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {tierKey !== "ALL" && (
@@ -153,6 +177,24 @@ export function ChampionBuildSection({
               title="보조 룬"
               stats={build.secondary_rune_stats}
               renderIcons={(s) => <Icon url={s.icon_url} size="h-9 w-9" rounded="rounded-full" />}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <StatSection
+              title="주룬 슬롯 2"
+              stats={build.primary_slot1_stats}
+              renderIcons={(s) => <Icon url={s.icon_url} size="h-8 w-8" rounded="rounded-full" />}
+            />
+            <StatSection
+              title="주룬 슬롯 3"
+              stats={build.primary_slot2_stats}
+              renderIcons={(s) => <Icon url={s.icon_url} size="h-8 w-8" rounded="rounded-full" />}
+            />
+            <StatSection
+              title="주룬 슬롯 4"
+              stats={build.primary_slot3_stats}
+              renderIcons={(s) => <Icon url={s.icon_url} size="h-8 w-8" rounded="rounded-full" />}
             />
           </div>
 

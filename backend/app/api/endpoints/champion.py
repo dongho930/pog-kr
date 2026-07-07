@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -5,6 +7,8 @@ from app.core.database import get_db
 from app.crud import crud_champion
 from app.schemas.champion import ChampionStatOut
 from app.schemas.champion_build import ChampionBuildOut
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/champions", tags=["champion"])
 
@@ -80,11 +84,10 @@ async def get_champion_build(
     queue_ids: str | None = Query(
         default=None, description="쉼표로 구분된 queue id 목록 (예: 420 = 솔로랭크, 440 = 자유랭크)"
     ),
-    min_tier: str | None = Query(
+    tier: str | None = Query(
         default=None,
-        description="이 티어 이상인 참가자만 집계 (예: GOLD). IRON/BRONZE/SILVER/GOLD/"
-        "PLATINUM/EMERALD/DIAMOND/MASTER 중 하나. 현재 캐싱된 티어 기준이라 "
-        "매치 당시 티어와 다를 수 있음.",
+        description="예: GOLD_PLUS(골드 이상), GOLD(골드만), MASTER_PLUS(마스터+그마+챌린저), "
+        "CHALLENGER, GRANDMASTER, ALL(전체, 기본값). tier_at_sync 기준.",
     ),
     db: AsyncSession = Depends(get_db),
 ):
@@ -102,10 +105,15 @@ async def get_champion_build(
 
     try:
         build = await crud_champion.get_champion_build(
-            db, champion_id, position, parsed_queue_ids, min_tier
+            db, champion_id, position, parsed_queue_ids, tier
         )
     except ValueError as e:
         raise HTTPException(400, str(e)) from e
+    except Exception as e:
+        # DB 스키마 불일치(예: 마이그레이션 안 한 새 컬럼) 등 예상 못한 에러도
+        # 원인을 숨기지 않고 그대로 알려준다.
+        logger.exception("챔피언 빌드 조회 중 예상하지 못한 오류 (champion_id=%s)", champion_id)
+        raise HTTPException(500, f"챔피언 빌드를 불러오는 중 오류가 발생했습니다: {e}") from e
 
     if build is None:
         raise HTTPException(404, "아직 이 챔피언의 매치 데이터가 없습니다")

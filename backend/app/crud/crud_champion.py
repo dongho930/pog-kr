@@ -211,7 +211,7 @@ async def get_champion_build(
     champion_id: int,
     position: str | None = None,
     queue_ids: list[int] | None = None,
-    min_tier: str | None = None,
+    tier: str | None = None,
     sample_limit: int = 500,
 ) -> dict | None:
     """
@@ -220,7 +220,12 @@ async def get_champion_build(
     비슷한 개념). 표본이 우리 DB에 쌓인 매치로 한정되므로, 매치가 적으면
     신뢰도가 낮다.
 
-    min_tier(예: "GOLD")를 넘기면 "그 티어 이상"인 참가자의 매치만 집계한다.
+    tier 예시:
+    - "GOLD_PLUS" -> 골드 이상(골드/플래티넘/.../챌린저) 전부
+    - "GOLD" -> 골드 정확히 그 구간만
+    - "MASTER_PLUS" -> 마스터/그마/챌린저 전부, "MASTER" -> 마스터만(그마/챌린저 제외)
+    - None 또는 "ALL" -> 필터 없음
+
     참가자별 tier_at_sync(그 매치를 DB에 처음 저장한 시점에 캐싱되어 있던
     티어를 고정해둔 값)를 기준으로 필터링한다 — 실제 매치 당시 티어는
     Riot API가 제공하지 않아 완벽히 같을 수는 없지만, 매번 "현재" 티어로
@@ -239,17 +244,22 @@ async def get_champion_build(
         query = query.join(Match, Match.id == MatchParticipant.match_id).where(
             Match.queue_id.in_(queue_ids)
         )
-    if min_tier:
-        min_tier_upper = min_tier.upper()
-        if min_tier_upper not in TIER_ORDER:
-            raise ValueError(f"지원하지 않는 티어입니다: {min_tier}")
-        min_rank = TIER_ORDER.index(min_tier_upper)
+    if tier and tier.upper() != "ALL":
+        tier_upper = tier.upper()
+        is_plus = tier_upper.endswith("_PLUS")
+        base_tier = tier_upper[: -len("_PLUS")] if is_plus else tier_upper
+        if base_tier not in TIER_ORDER:
+            raise ValueError(f"지원하지 않는 티어입니다: {tier}")
+        target_rank = TIER_ORDER.index(base_tier)
         tier_rank_case = case(
-            {tier: i for i, tier in enumerate(TIER_ORDER)},
+            {t: i for i, t in enumerate(TIER_ORDER)},
             value=MatchParticipant.tier_at_sync,
             else_=-1,
         )
-        query = query.where(tier_rank_case >= min_rank)
+        if is_plus:
+            query = query.where(tier_rank_case >= target_rank)
+        else:
+            query = query.where(tier_rank_case == target_rank)
     query = query.limit(sample_limit)
 
     rows = list((await db.execute(query)).scalars().all())
@@ -289,6 +299,9 @@ async def get_champion_build(
 
     rune_page_groups: dict = {}
     keystone_groups: dict = {}
+    primary_slot1_groups: dict = {}
+    primary_slot2_groups: dict = {}
+    primary_slot3_groups: dict = {}
     secondary_rune_groups: dict = {}
     spell_groups: dict = {}
     skill_order_groups: dict = {}
@@ -305,6 +318,16 @@ async def get_champion_build(
 
         add(rune_page_groups, (primary_style, sub_style), r.win)
         add(keystone_groups, keystone, r.win)
+
+        # primary_runes = [키스톤, 슬롯1, 슬롯2, 슬롯3] 순서로 저장되어 있음
+        primary_runes = runes.get("primary_runes", [])
+        if len(primary_runes) > 1:
+            add(primary_slot1_groups, primary_runes[1], r.win)
+        if len(primary_runes) > 2:
+            add(primary_slot2_groups, primary_runes[2], r.win)
+        if len(primary_runes) > 3:
+            add(primary_slot3_groups, primary_runes[3], r.win)
+
         for perk in runes.get("secondary_runes", []):
             add(secondary_rune_groups, perk, r.win)
 
@@ -348,6 +371,18 @@ async def get_champion_build(
     for stat in keystone_stats:
         stat["icon_url"] = ddragon.rune_icon_url(stat["item_ids"][0])
 
+    primary_slot1_stats = to_stat_list(primary_slot1_groups, 4, lambda k: [k])
+    for stat in primary_slot1_stats:
+        stat["icon_url"] = ddragon.rune_icon_url(stat["item_ids"][0])
+
+    primary_slot2_stats = to_stat_list(primary_slot2_groups, 4, lambda k: [k])
+    for stat in primary_slot2_stats:
+        stat["icon_url"] = ddragon.rune_icon_url(stat["item_ids"][0])
+
+    primary_slot3_stats = to_stat_list(primary_slot3_groups, 4, lambda k: [k])
+    for stat in primary_slot3_stats:
+        stat["icon_url"] = ddragon.rune_icon_url(stat["item_ids"][0])
+
     secondary_rune_stats = to_stat_list(secondary_rune_groups, 8, lambda k: [k])
     for stat in secondary_rune_stats:
         stat["icon_url"] = ddragon.rune_icon_url(stat["item_ids"][0])
@@ -388,6 +423,9 @@ async def get_champion_build(
         "win_rate": round(wins / total_games * 100, 1) if total_games else 0.0,
         "rune_page_stats": rune_page_stats,
         "keystone_stats": keystone_stats,
+        "primary_slot1_stats": primary_slot1_stats,
+        "primary_slot2_stats": primary_slot2_stats,
+        "primary_slot3_stats": primary_slot3_stats,
         "secondary_rune_stats": secondary_rune_stats,
         "spell_stats": spell_stats,
         "skill_order_stats": skill_order_stats,

@@ -131,6 +131,9 @@ export interface ChampionBuild {
   win_rate: number;
   rune_page_stats: ChampionBuildStat[];
   keystone_stats: ChampionBuildStat[];
+  primary_slot1_stats: ChampionBuildStat[];
+  primary_slot2_stats: ChampionBuildStat[];
+  primary_slot3_stats: ChampionBuildStat[];
   secondary_rune_stats: ChampionBuildStat[];
   spell_stats: ChampionBuildStat[];
   skill_order_stats: ChampionBuildStat[];
@@ -205,12 +208,12 @@ export const api = {
     apiFetch<LeaderboardEntry[]>(`/leaderboard?tier=${tier}&queue=${queue}&limit=${limit}`),
   getChampionBuild: (
     championId: number,
-    options?: { position?: string; queueIds?: number[]; minTier?: string }
+    options?: { position?: string; queueIds?: number[]; tier?: string }
   ) => {
     const params = new URLSearchParams();
     if (options?.position) params.set("position", options.position);
     if (options?.queueIds?.length) params.set("queue_ids", options.queueIds.join(","));
-    if (options?.minTier) params.set("min_tier", options.minTier);
+    if (options?.tier) params.set("tier", options.tier);
     const qs = params.toString();
     return apiFetch<ChampionBuild>(`/champions/${championId}/build${qs ? `?${qs}` : ""}`);
   },
