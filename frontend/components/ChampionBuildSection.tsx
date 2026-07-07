@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { api, ChampionBuild } from "@/lib/api";
 import { StatSection, Icon } from "./ChampionBuildStatSection";
+import { RunePageGrid } from "./RunePageGrid";
 import { SkillBuildGrid } from "./SkillBuildGrid";
 
 import { GAME_MODES } from "@/lib/gameModes";
@@ -156,47 +157,17 @@ export function ChampionBuildSection({
             이 조건의 매치 {build.games}경기 · 승률 {build.win_rate.toFixed(1)}%
           </p>
 
-          <StatSection
-            title="룬 페이지 조합"
-            stats={build.rune_page_stats}
-            renderIcons={(s) => (
-              <>
-                <Icon url={s.primary_style_icon_url} size="h-9 w-9" rounded="rounded-full" />
-                <Icon url={s.sub_style_icon_url} size="h-7 w-7" rounded="rounded-full" />
-              </>
-            )}
-          />
-
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <StatSection
-              title="키스톤"
-              stats={build.keystone_stats}
-              renderIcons={(s) => <Icon url={s.icon_url} size="h-9 w-9" rounded="rounded-full" />}
+          <section>
+            <h2 className="mb-2 text-sm font-semibold text-text-muted">룬</h2>
+            <RunePageGrid
+              runePageStats={build.rune_page_stats}
+              keystoneStats={build.keystone_stats}
+              primarySlot1Stats={build.primary_slot1_stats}
+              primarySlot2Stats={build.primary_slot2_stats}
+              primarySlot3Stats={build.primary_slot3_stats}
+              secondaryRuneStats={build.secondary_rune_stats}
             />
-            <StatSection
-              title="보조 룬"
-              stats={build.secondary_rune_stats}
-              renderIcons={(s) => <Icon url={s.icon_url} size="h-9 w-9" rounded="rounded-full" />}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            <StatSection
-              title="주룬 슬롯 2"
-              stats={build.primary_slot1_stats}
-              renderIcons={(s) => <Icon url={s.icon_url} size="h-8 w-8" rounded="rounded-full" />}
-            />
-            <StatSection
-              title="주룬 슬롯 3"
-              stats={build.primary_slot2_stats}
-              renderIcons={(s) => <Icon url={s.icon_url} size="h-8 w-8" rounded="rounded-full" />}
-            />
-            <StatSection
-              title="주룬 슬롯 4"
-              stats={build.primary_slot3_stats}
-              renderIcons={(s) => <Icon url={s.icon_url} size="h-8 w-8" rounded="rounded-full" />}
-            />
-          </div>
+          </section>
 
           <StatSection
             title="소환사 주문"
