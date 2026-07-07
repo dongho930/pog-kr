@@ -11,28 +11,39 @@ const RANK_FILTERS = [
   { key: "FLEX", label: "자유 랭크", queueIds: [440] },
 ];
 
+const POSITION_FILTERS = [
+  { key: "ALL", label: "전체", position: undefined as string | undefined },
+  { key: "TOP", label: "탑", position: "TOP" },
+  { key: "JUNGLE", label: "정글", position: "JUNGLE" },
+  { key: "MIDDLE", label: "미드", position: "MIDDLE" },
+  { key: "BOTTOM", label: "바텀", position: "BOTTOM" },
+  { key: "UTILITY", label: "서포터", position: "UTILITY" },
+];
+
 const CURRENT_PATCH = "14.20";
 
 export function GlobalChampionStatsSection({ initialStats }: { initialStats: ChampionStat[] }) {
   const [rankKey, setRankKey] = useState("ALL_RANK");
+  const [positionKey, setPositionKey] = useState("ALL");
   const [stats, setStats] = useState<ChampionStat[]>(initialStats);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
 
   useEffect(() => {
-    const filter = RANK_FILTERS.find((f) => f.key === rankKey) ?? RANK_FILTERS[0];
-    if (rankKey === "ALL_RANK") {
+    if (rankKey === "ALL_RANK" && positionKey === "ALL") {
       // 초기 로딩과 동일한 필터라 서버에서 이미 받아온 값을 재사용
       setStats(initialStats);
       setError(null);
       return;
     }
+    const rank = RANK_FILTERS.find((f) => f.key === rankKey) ?? RANK_FILTERS[0];
+    const position = POSITION_FILTERS.find((f) => f.key === positionKey)?.position;
     let cancelled = false;
     setLoading(true);
     setError(null);
     api
-      .getTierList(CURRENT_PATCH, undefined, filter.queueIds)
+      .getTierList(CURRENT_PATCH, position, rank.queueIds)
       .then((data) => {
         if (!cancelled) setStats(data);
       })
@@ -45,7 +56,7 @@ export function GlobalChampionStatsSection({ initialStats }: { initialStats: Cha
     return () => {
       cancelled = true;
     };
-  }, [rankKey, initialStats]);
+  }, [rankKey, positionKey, initialStats]);
 
   const filteredStats = useMemo(() => {
     const trimmed = query.trim().toLowerCase();
@@ -55,6 +66,22 @@ export function GlobalChampionStatsSection({ initialStats }: { initialStats: Cha
 
   return (
     <div>
+      <div className="mb-3 flex gap-1">
+        {POSITION_FILTERS.map((p) => (
+          <button
+            key={p.key}
+            onClick={() => setPositionKey(p.key)}
+            className={`flex-1 rounded-md px-4 py-2 text-sm font-semibold transition ${
+              positionKey === p.key
+                ? "bg-accent-gold text-[#171207]"
+                : "bg-base-surface text-text-muted hover:text-text-primary"
+            }`}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <SubModeTabs
           subModes={RANK_FILTERS.map(({ key, label }) => ({ key, label, queueIds: null }))}

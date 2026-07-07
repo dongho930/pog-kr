@@ -105,6 +105,12 @@ export interface ChampionStat {
   penta_kills: number;
 }
 
+export interface ChampionSummary {
+  champion_id: number;
+  champion_name: string;
+  champion_icon_url: string;
+}
+
 export interface ParticipantRank {
   puuid: string;
   tier: string | null;
@@ -200,6 +206,7 @@ export const api = {
         queueIds && queueIds.length ? `&queue_ids=${queueIds.join(",")}` : ""
       }`
     ),
+  getAllChampions: () => apiFetch<ChampionSummary[]>("/champions/all"),
   getChampionStatsBySummoner: (puuid: string, queueIds?: number[]) =>
     apiFetch<ChampionStat[]>(
       `/champions/by-summoner/${puuid}${queueIds && queueIds.length ? `?queue_ids=${queueIds.join(",")}` : ""}`

@@ -5,8 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.crud import crud_champion
-from app.schemas.champion import ChampionStatOut
+from app.schemas.champion import ChampionStatOut, ChampionSummaryOut
 from app.schemas.champion_build import ChampionBuildOut
+from app.services import ddragon
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +64,26 @@ async def get_champion_stats_by_summoner(
         except ValueError:
             raise HTTPException(400, "queue_ids는 쉼표로 구분된 숫자여야 합니다")
     return await crud_champion.get_champion_stats_for_puuid(db, puuid, parsed_queue_ids)
+
+
+@router.get("/all", response_model=list[ChampionSummaryOut])
+async def get_all_champions():
+    """
+    전체 챔피언 목록을 이름(가나다순) 기준으로 정렬해서 반환한다. 챔피언
+    검색/선택 사이드바용 — 매치 데이터 유무와 무관하게 항상 전체 챔피언이
+    나온다.
+    """
+    name_map = await ddragon.get_champion_name_map()
+    champions = [
+        {
+            "champion_id": champion_id,
+            "champion_name": name,
+            "champion_icon_url": ddragon.champion_icon_url(champion_id),
+        }
+        for champion_id, name in name_map.items()
+    ]
+    champions.sort(key=lambda c: c["champion_name"])
+    return champions
 
 
 @router.get("/{champion_id}", response_model=ChampionStatOut)

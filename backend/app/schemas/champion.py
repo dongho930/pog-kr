@@ -35,3 +35,11 @@ class ChampionStatOut(BaseModel):
     @property
     def champion_icon_url(self) -> str:
         return ddragon.champion_icon_url(self.champion_id)
+
+
+class ChampionSummaryOut(BaseModel):
+    """챔피언 검색/선택 사이드바용 최소 정보."""
+
+    champion_id: int
+    champion_name: str
+    champion_icon_url: str

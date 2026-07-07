@@ -179,16 +179,35 @@ def spell_icon_url(spell_id: int) -> str | None:
 
 
 def rune_icon_url(perk_id: int | None) -> str | None:
-    if not perk_id or not _RUNE_ICON_CACHE:
+    """
+    개별 룬(perk) 아이콘. Data Dragon의 runesReforged.json 캐시에 없는
+    룬(예: 예전 패치에만 존재했던 룬)도 항상 아이콘이 나오도록, 캐시 조회
+    대신 Community Dragon의 숫자 ID 기반 경로를 바로 사용한다 (champion_icon_url과
+    같은 방식 — 버전 관리가 필요 없어 항상 최신 자산을 가리킨다).
+    """
+    if not perk_id:
         return None
-    return _RUNE_ICON_CACHE.get(perk_id)
+    return f"https://cdn.communitydragon.org/latest/perk/{perk_id}"
+
+
+# 5개 룬트리는 몇 년째 안 바뀌는 고정값이라, 캐시 조회가 실패해도 항상
+# 아이콘이 나오도록 폴백으로 하드코딩해둔다.
+_RUNE_STYLE_FALLBACK: dict[int, str] = {
+    8000: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7201_Precision.png",
+    8100: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7200_Domination.png",
+    8200: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7202_Sorcery.png",
+    8300: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7203_Whimsy.png",
+    8400: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7204_Resolve.png",
+}
 
 
 def rune_style_icon_url(style_id: int | None) -> str | None:
     """주/보조 룬트리 자체의 아이콘 (예: 지배 트리 아이콘)."""
-    if not style_id or not _RUNE_STYLE_ICON_CACHE:
+    if not style_id:
         return None
-    return _RUNE_STYLE_ICON_CACHE.get(style_id)
+    if _RUNE_STYLE_ICON_CACHE and style_id in _RUNE_STYLE_ICON_CACHE:
+        return _RUNE_STYLE_ICON_CACHE[style_id]
+    return _RUNE_STYLE_FALLBACK.get(style_id)
 
 
 def _current_version() -> str:
