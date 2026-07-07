@@ -97,6 +97,23 @@ class MatchParticipantOut(BaseModel):
     def sub_style_icon_url(self) -> str | None:
         return ddragon.rune_style_icon_url(self.runes.get("sub_style"))
 
+    @computed_field
+    @property
+    def primary_style_icon_url(self) -> str | None:
+        return ddragon.rune_style_icon_url(self.runes.get("primary_style"))
+
+    @computed_field
+    @property
+    def primary_rune_icon_urls(self) -> list[str | None]:
+        """주 룬트리에서 고른 4개(키스톤 포함) 아이콘."""
+        return [ddragon.rune_icon_url(perk_id) for perk_id in self.runes.get("primary_runes", [])]
+
+    @computed_field
+    @property
+    def secondary_rune_icon_urls(self) -> list[str | None]:
+        """보조 룬트리에서 고른 2개 아이콘."""
+        return [ddragon.rune_icon_url(perk_id) for perk_id in self.runes.get("secondary_runes", [])]
+
 
 class MatchOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)

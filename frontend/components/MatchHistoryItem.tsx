@@ -73,12 +73,12 @@ export function MatchHistoryItem({ match, puuid }: { match: Match; puuid: string
             me.win ? "border-l-accent-win" : "border-l-accent-loss"
           }`}
         >
-          <p className={`text-base font-semibold ${me.win ? "text-accent-win" : "text-accent-loss"}`}>
+          <p className={`text-sm font-semibold ${me.win ? "text-accent-win" : "text-accent-loss"}`}>
             {me.win ? "승리" : "패배"}
           </p>
-          <p className="text-sm text-text-faint">{QUEUE_LABEL[match.queue_id] ?? `큐 ${match.queue_id}`}</p>
-          <p className="text-sm text-text-faint">{formatDuration(match.game_duration)}</p>
-          <p className="text-sm text-text-faint">{formatRelativeDate(match.game_creation)}</p>
+          <p className="text-xs text-text-faint">{QUEUE_LABEL[match.queue_id] ?? `큐 ${match.queue_id}`}</p>
+          <p className="text-xs text-text-faint">{formatDuration(match.game_duration)}</p>
+          <p className="text-xs text-text-faint">{formatRelativeDate(match.game_creation)}</p>
         </td>
 
         {/* 초상화 (확대) */}
@@ -107,22 +107,22 @@ export function MatchHistoryItem({ match, puuid }: { match: Match; puuid: string
 
         {/* KDA */}
         <td className="whitespace-nowrap p-3">
-          <p className="font-mono text-base text-text-primary">
+          <p className="font-mono text-sm text-text-primary">
             {me.kills} / {me.deaths} / {me.assists}
           </p>
-          <p className={`font-mono text-lg font-bold ${kdaColorClass(kdaNumber)}`}>
+          <p className={`font-mono text-base font-bold ${kdaColorClass(kdaNumber)}`}>
             {kdaLabel} KDA
           </p>
         </td>
 
         {/* 킬관여율 */}
         <td className="whitespace-nowrap p-3">
-          <p className="text-sm text-text-faint">킬관여율</p>
-          <p className="font-mono text-lg font-bold text-text-primary">{killParticipation}%</p>
+          <p className="text-xs text-text-faint">킬관여율</p>
+          <p className="font-mono text-base font-bold text-text-primary">{killParticipation}%</p>
         </td>
 
         {/* CS/골드, 시야점수/제어와드 */}
-        <td className="whitespace-nowrap p-3 text-left text-sm text-text-muted">
+        <td className="whitespace-nowrap p-3 text-left text-xs text-text-muted">
           <p>
             <span className="font-bold text-text-primary">CS {me.cs}</span> ({csPerMin}/분) · 골드{" "}
             {me.gold_earned.toLocaleString()}

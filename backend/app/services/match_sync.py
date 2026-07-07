@@ -39,16 +39,24 @@ def _parse_participant(p: dict) -> dict:
     sub_style = next(
         (s.get("style") for s in styles if s.get("description") == "subStyle"), None
     )
-    # 키스톤 룬 = 주 룬트리(primaryStyle)의 첫 번째 선택지
+    # 키스톤 룬 = 주 룬트리(primaryStyle)의 첫 번째 선택지. 나머지 3개는
+    # 주 룬트리의 보조 슬롯, subStyle 2개는 보조 룬트리에서 고른 룬.
     primary_selections = next(
         (s.get("selections", []) for s in styles if s.get("description") == "primaryStyle"), []
     )
+    sub_selections = next(
+        (s.get("selections", []) for s in styles if s.get("description") == "subStyle"), []
+    )
     keystone_id = primary_selections[0]["perk"] if primary_selections else None
+    primary_rune_ids = [sel["perk"] for sel in primary_selections]
+    secondary_rune_ids = [sel["perk"] for sel in sub_selections]
 
     runes = {
         "primary_style": primary_style,
         "sub_style": sub_style,
         "keystone": keystone_id,
+        "primary_runes": primary_rune_ids,
+        "secondary_runes": secondary_rune_ids,
     }
     return {
         "puuid": p["puuid"],

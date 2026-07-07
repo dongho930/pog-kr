@@ -50,6 +50,9 @@ export interface MatchParticipant {
   spell2_icon_url: string | null;
   keystone_icon_url: string | null;
   sub_style_icon_url: string | null;
+  primary_style_icon_url: string | null;
+  primary_rune_icon_urls: (string | null)[];
+  secondary_rune_icon_urls: (string | null)[];
   vision_score: number;
   vision_wards_bought: number;
   double_kills: number;

@@ -50,32 +50,55 @@ export function BuildTimeline({ participant }: { participant: MatchParticipant }
 
       <section>
         <h3 className="mb-2 text-sm font-semibold text-text-muted">룬</h3>
-        <div className="flex gap-4">
-          <div className="flex flex-col items-center">
-            <div className="h-10 w-10 overflow-hidden rounded-full border border-base-border bg-base-elevated">
+        <div className="flex flex-wrap gap-6">
+          <div>
+            <div className="mb-1.5 flex items-center gap-1.5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              {participant.keystone_icon_url && (
-                <img
-                  src={participant.keystone_icon_url}
-                  alt="키스톤"
-                  className="h-full w-full object-cover"
-                />
-              )}
+              <img
+                src={participant.primary_style_icon_url ?? undefined}
+                alt="주 룬트리"
+                className="h-4 w-4 object-contain"
+              />
+              <span className="text-[10px] text-text-faint">주 룬트리</span>
             </div>
-            <span className="mt-1 text-[10px] text-text-faint">키스톤</span>
+            <div className="flex gap-2">
+              {participant.primary_rune_icon_urls.map((url, i) => (
+                <div
+                  key={i}
+                  className={`overflow-hidden rounded-full border bg-base-elevated ${
+                    i === 0
+                      ? "h-11 w-11 border-accent-gold/60"
+                      : "h-8 w-8 self-end border-base-border"
+                  }`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  {url && <img src={url} alt="" className="h-full w-full object-cover" />}
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="flex flex-col items-center">
-            <div className="h-10 w-10 overflow-hidden rounded-full border border-base-border bg-base-elevated p-1.5">
+
+          <div>
+            <div className="mb-1.5 flex items-center gap-1.5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              {participant.sub_style_icon_url && (
-                <img
-                  src={participant.sub_style_icon_url}
-                  alt="보조 룬트리"
-                  className="h-full w-full object-contain"
-                />
-              )}
+              <img
+                src={participant.sub_style_icon_url ?? undefined}
+                alt="보조 룬트리"
+                className="h-4 w-4 object-contain"
+              />
+              <span className="text-[10px] text-text-faint">보조 룬트리</span>
             </div>
-            <span className="mt-1 text-[10px] text-text-faint">보조 룬트리</span>
+            <div className="flex gap-2">
+              {participant.secondary_rune_icon_urls.map((url, i) => (
+                <div
+                  key={i}
+                  className="h-8 w-8 overflow-hidden rounded-full border border-base-border bg-base-elevated"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  {url && <img src={url} alt="" className="h-full w-full object-cover" />}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
