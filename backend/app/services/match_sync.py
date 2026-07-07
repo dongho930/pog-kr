@@ -12,6 +12,7 @@ DB만 조회하도록 바꾸는 것을 권장한다.
 
 from datetime import datetime, timezone
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.crud_match import get_match_by_id
@@ -163,7 +164,20 @@ async def save_match_if_new(db: AsyncSession, match_id: str) -> Match:
         )
 
     db.add(match)
-    await db.commit()
+    try:
+        await db.commit()
+    except IntegrityError:
+        # 경쟁 상태(race condition): 이 함수가 "없다"고 확인한 직후, 다른
+        # 요청(예: 다른 탭, 거의 동시에 들어온 API 호출)이 먼저 같은 매치를
+        # 저장해버린 경우다. 새로 만들려던 건 버리고, 이미 저장된 걸 그대로
+        # 반환한다.
+        await db.rollback()
+        logger.info("매치 동시 저장 감지, 기존 레코드 재사용: %s", match_id)
+        existing = await get_match_by_id(db, match_id)
+        if existing:
+            return existing
+        raise  # 그래도 못 찾으면(다른 원인) 원래 에러를 그대로 올린다
+
     await db.refresh(match)
     return match
 

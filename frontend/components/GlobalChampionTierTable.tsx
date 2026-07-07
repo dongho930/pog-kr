@@ -164,7 +164,10 @@ export function GlobalChampionTierTable({ stats }: { stats: ChampionStat[] }) {
           {sorted.map((s) => (
             <tr key={`${s.champion_id}-${s.position}`} className="bg-base-surface">
               <td className="rounded-l-card px-3 py-2.5">
-                <div className="flex items-center gap-2">
+                <a
+                  href={`/champions/${s.champion_id}/build`}
+                  className="flex items-center gap-2 hover:text-accent-gold"
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={s.champion_icon_url}
@@ -172,7 +175,7 @@ export function GlobalChampionTierTable({ stats }: { stats: ChampionStat[] }) {
                     className="h-7 w-7 rounded-full bg-base-elevated object-cover"
                   />
                   <span className="text-text-primary">{s.champion_name}</span>
-                </div>
+                </a>
               </td>
               <td className="px-3 py-2.5 text-text-muted">
                 {POSITION_LABEL[s.position] ?? s.position}

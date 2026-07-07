@@ -198,3 +198,103 @@ async def get_aggregated_stats(
 
     results.sort(key=lambda r: r["win_rate"], reverse=True)
     return results
+
+
+async def get_champion_build(
+    db: AsyncSession,
+    champion_id: int,
+    position: str | None = None,
+    queue_ids: list[int] | None = None,
+    sample_limit: int = 300,
+) -> dict | None:
+    """
+    이 챔피언을 플레이한 매치 기록들을 모아서 가장 많이 쓰인 스펠/룬/아이템/
+    스킬 순서를 집계한다 (다수결 방식 — op.gg의 "추천 빌드"와 비슷한 개념).
+    표본이 우리 DB에 쌓인 매치로 한정되므로, 매치가 적으면 신뢰도가 낮다.
+    """
+    from collections import Counter
+
+    query = select(MatchParticipant).where(MatchParticipant.champion_id == champion_id)
+    if position:
+        query = query.where(MatchParticipant.team_position == position)
+    if queue_ids:
+        query = query.join(Match, Match.id == MatchParticipant.match_id).where(
+            Match.queue_id.in_(queue_ids)
+        )
+    query = query.limit(sample_limit)
+
+    rows = list((await db.execute(query)).scalars().all())
+    if not rows:
+        return None
+
+    games = len(rows)
+    wins = sum(1 for r in rows if r.win)
+
+    core_item_counter: Counter[int] = Counter()
+    boots_counter: Counter[int] = Counter()
+    trinket_counter: Counter[int] = Counter()
+    keystone_counter: Counter[int] = Counter()
+    primary_style_counter: Counter[int] = Counter()
+    sub_style_counter: Counter[int] = Counter()
+    primary_minor_counter: Counter[int] = Counter()
+    secondary_rune_counter: Counter[int] = Counter()
+    spell_pair_counter: Counter[tuple[int, int]] = Counter()
+    skill_priority_counter: Counter[tuple[str, ...]] = Counter()
+
+    for r in rows:
+        for item_id in r.items[:6]:
+            if not item_id:
+                continue
+            if ddragon.is_boots(item_id):
+                boots_counter[item_id] += 1
+            else:
+                core_item_counter[item_id] += 1
+        if r.items[6]:
+            trinket_counter[r.items[6]] += 1
+
+        runes = r.runes or {}
+        if runes.get("keystone"):
+            keystone_counter[runes["keystone"]] += 1
+        if runes.get("primary_style"):
+            primary_style_counter[runes["primary_style"]] += 1
+        if runes.get("sub_style"):
+            sub_style_counter[runes["sub_style"]] += 1
+        for perk in runes.get("primary_runes", [])[1:]:
+            primary_minor_counter[perk] += 1
+        for perk in runes.get("secondary_runes", []):
+            secondary_rune_counter[perk] += 1
+
+        spell_pair = tuple(sorted([r.summoner1_id, r.summoner2_id]))
+        if all(spell_pair):
+            spell_pair_counter[spell_pair] += 1
+
+        if r.skill_order:
+            first_three = tuple(
+                s["skill"] for s in sorted(r.skill_order, key=lambda s: s["level"])[:3]
+            )
+            if len(first_three) == 3:
+                skill_priority_counter[first_three] += 1
+
+    def top_ids(counter: Counter[int], n: int) -> list[int]:
+        return [item for item, _ in counter.most_common(n)]
+
+    name_map = await ddragon.get_champion_name_map()
+    top_spells = spell_pair_counter.most_common(1)
+    top_skills = skill_priority_counter.most_common(1)
+
+    return {
+        "champion_id": champion_id,
+        "champion_name": name_map.get(champion_id, f"챔피언 {champion_id}"),
+        "games": games,
+        "win_rate": round(wins / games * 100, 1) if games else 0.0,
+        "core_item_ids": top_ids(core_item_counter, 6),
+        "boots_item_id": top_ids(boots_counter, 1)[0] if boots_counter else None,
+        "trinket_item_id": top_ids(trinket_counter, 1)[0] if trinket_counter else None,
+        "keystone_id": top_ids(keystone_counter, 1)[0] if keystone_counter else None,
+        "primary_style_id": top_ids(primary_style_counter, 1)[0] if primary_style_counter else None,
+        "sub_style_id": top_ids(sub_style_counter, 1)[0] if sub_style_counter else None,
+        "primary_minor_rune_ids": top_ids(primary_minor_counter, 3),
+        "secondary_rune_ids": top_ids(secondary_rune_counter, 2),
+        "spell_ids": list(top_spells[0][0]) if top_spells else [],
+        "skill_priority": list(top_skills[0][0]) if top_skills else [],
+    }

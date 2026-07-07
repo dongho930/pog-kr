@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.crud import crud_champion
 from app.schemas.champion import ChampionStatOut
+from app.schemas.champion_build import ChampionBuildOut
 
 router = APIRouter(prefix="/champions", tags=["champion"])
 
@@ -70,3 +71,30 @@ async def get_champion_detail(
     if stat is None:
         raise HTTPException(404, "해당 패치의 챔피언 통계가 없습니다")
     return stat
+
+
+@router.get("/{champion_id}/build", response_model=ChampionBuildOut)
+async def get_champion_build(
+    champion_id: int,
+    position: str | None = Query(default=None, description="TOP/JUNGLE/MIDDLE/BOTTOM/UTILITY"),
+    queue_ids: str | None = Query(
+        default=None, description="쉼표로 구분된 queue id 목록 (예: 420,440 = 솔로+자유랭크)"
+    ),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    이 챔피언의 추천 스펠/룬/아이템/스킬 순서 (우리 DB에 쌓인 매치 기준
+    다수결 집계). op.gg 같은 "챔피언 분석" 페이지와 비슷한 개념이지만,
+    표본이 pog.kr에서 실제로 수집된 매치로 한정된다.
+    """
+    parsed_queue_ids = None
+    if queue_ids:
+        try:
+            parsed_queue_ids = [int(q) for q in queue_ids.split(",") if q.strip()]
+        except ValueError:
+            raise HTTPException(400, "queue_ids는 쉼표로 구분된 숫자여야 합니다")
+
+    build = await crud_champion.get_champion_build(db, champion_id, position, parsed_queue_ids)
+    if build is None:
+        raise HTTPException(404, "아직 이 챔피언의 매치 데이터가 없습니다")
+    return build

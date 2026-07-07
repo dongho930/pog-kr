@@ -112,6 +112,24 @@ export interface ParticipantRank {
   level: number | null;
 }
 
+export interface ChampionBuild {
+  champion_id: number;
+  champion_name: string;
+  champion_icon_url: string;
+  games: number;
+  win_rate: number;
+  core_item_icon_urls: (string | null)[];
+  boots_icon_url: string | null;
+  trinket_icon_url: string | null;
+  keystone_icon_url: string | null;
+  primary_style_icon_url: string | null;
+  sub_style_icon_url: string | null;
+  primary_minor_rune_icon_urls: (string | null)[];
+  secondary_rune_icon_urls: (string | null)[];
+  spell_icon_urls: (string | null)[];
+  skill_priority: string[];
+}
+
 export interface LeaderboardEntry {
   rank: number;
   puuid: string;
@@ -175,4 +193,10 @@ export const api = {
     ),
   getLeaderboard: (tier: string, queue: string, limit = 50) =>
     apiFetch<LeaderboardEntry[]>(`/leaderboard?tier=${tier}&queue=${queue}&limit=${limit}`),
+  getChampionBuild: (championId: number, position?: string, queueIds?: number[]) =>
+    apiFetch<ChampionBuild>(
+      `/champions/${championId}/build?${position ? `position=${position}&` : ""}${
+        queueIds && queueIds.length ? `queue_ids=${queueIds.join(",")}` : ""
+      }`
+    ),
 };
