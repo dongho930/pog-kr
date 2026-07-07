@@ -43,3 +43,4 @@ class ChampionSummaryOut(BaseModel):
     champion_id: int
     champion_name: str
     champion_icon_url: str
+    positions: list[str] = []  # 우리 DB에 기록된 실제 플레이 포지션 (없으면 빈 리스트)

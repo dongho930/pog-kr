@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { api, ChampionBuild } from "@/lib/api";
 import { StatSection, Icon } from "./ChampionBuildStatSection";
 import { RunePageGrid } from "./RunePageGrid";
-import { SkillBuildGrid } from "./SkillBuildGrid";
+import { SkillBuildSection } from "./SkillBuildSection";
 
 import { GAME_MODES } from "@/lib/gameModes";
 
@@ -181,16 +181,12 @@ export function ChampionBuildSection({
             )}
           />
 
-          <StatSection
-            title="스킬 우선순위"
-            stats={build.skill_order_stats}
-            renderIcons={() => null}
-            renderLabel={(s) => (s.item_ids as string[]).join(" > ")}
-          />
-
           <section>
-            <h2 className="mb-2 text-sm font-semibold text-text-muted">스킬 빌드 순서 (레벨별)</h2>
-            <SkillBuildGrid fullSkillOrder={build.full_skill_order} />
+            <h2 className="mb-2 text-sm font-semibold text-text-muted">스킬 빌드</h2>
+            <SkillBuildSection
+              skillOrderStats={build.skill_order_stats}
+              defaultFullOrder={build.full_skill_order}
+            />
           </section>
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

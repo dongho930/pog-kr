@@ -67,18 +67,20 @@ async def get_champion_stats_by_summoner(
 
 
 @router.get("/all", response_model=list[ChampionSummaryOut])
-async def get_all_champions():
+async def get_all_champions(db: AsyncSession = Depends(get_db)):
     """
     전체 챔피언 목록을 이름(가나다순) 기준으로 정렬해서 반환한다. 챔피언
     검색/선택 사이드바용 — 매치 데이터 유무와 무관하게 항상 전체 챔피언이
-    나온다.
+    나온다. 각 챔피언의 실제 플레이 포지션(우리 DB 기준)도 함께 내려준다.
     """
     name_map = await ddragon.get_champion_name_map()
+    position_map = await crud_champion.get_champion_positions(db)
     champions = [
         {
             "champion_id": champion_id,
             "champion_name": name,
             "champion_icon_url": ddragon.champion_icon_url(champion_id),
+            "positions": position_map.get(champion_id, []),
         }
         for champion_id, name in name_map.items()
     ]

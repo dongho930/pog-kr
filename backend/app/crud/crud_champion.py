@@ -12,6 +12,25 @@ TIER_ORDER = [
 ]
 
 
+async def get_champion_positions(db: AsyncSession) -> dict[int, list[str]]:
+    """
+    챔피언별로 우리 DB에 기록된 매치에서 실제로 플레이된 포지션 목록을
+    반환한다 (Riot이 "이 챔피언은 어느 포지션이다"라는 공식 데이터를 주지
+    않아서, 실제 매치 데이터 기준으로 추정한다). 매치 기록이 없는 챔피언은
+    빈 리스트가 된다 — 챔피언 검색 사이드바의 포지션 필터용.
+    """
+    query = (
+        select(MatchParticipant.champion_id, MatchParticipant.team_position)
+        .where(MatchParticipant.team_position != "")
+        .distinct()
+    )
+    rows = (await db.execute(query)).all()
+    result: dict[int, list[str]] = {}
+    for champion_id, position in rows:
+        result.setdefault(champion_id, []).append(position)
+    return result
+
+
 async def get_tier_list(
     db: AsyncSession, patch: str, position: str | None = None
 ) -> list[ChampionStat]:
@@ -297,6 +316,26 @@ async def get_champion_build(
             )
         return result
 
+    def compute_full_order(skill_order_lists: list[list[dict]]) -> list[str | None]:
+        """참가자들의 전체 스킬 순서 목록에서, 레벨 1~18 각각 가장 많이 찍힌 스킬을 뽑는다."""
+        level_counts: dict[int, dict[str, int]] = {}
+        for skill_order in skill_order_lists:
+            for entry in skill_order:
+                level = entry.get("level")
+                skill = entry.get("skill")
+                if level is None or skill is None:
+                    continue
+                counter = level_counts.setdefault(level, {})
+                counter[skill] = counter.get(skill, 0) + 1
+        order: list[str | None] = []
+        for level in range(1, 19):
+            counts = level_counts.get(level)
+            if not counts:
+                order.append(None)
+                continue
+            order.append(max(counts.items(), key=lambda kv: kv[1])[0])
+        return order
+
     rune_page_groups: dict = {}
     keystone_groups: dict = {}
     primary_slot1_groups: dict = {}
@@ -305,7 +344,8 @@ async def get_champion_build(
     secondary_rune_groups: dict = {}
     spell_groups: dict = {}
     skill_order_groups: dict = {}
-    level_skill_groups: dict[int, dict[str, int]] = {}
+    skill_order_group_rows: dict[tuple, list] = {}
+    all_skill_order_lists: list = []
     boots_groups: dict = {}
     trinket_groups: dict = {}
     core_item_groups: dict = {}
@@ -341,15 +381,9 @@ async def get_champion_build(
             )
             if len(first_three) == 3:
                 add(skill_order_groups, first_three, r.win)
+                skill_order_group_rows.setdefault(first_three, []).append(r.skill_order)
 
-            # 레벨별(1~18) 어떤 스킬을 찍었는지도 따로 집계 (전체 스킬 빌드 순서 그리드용)
-            for entry in r.skill_order:
-                level = entry.get("level")
-                skill = entry.get("skill")
-                if level is None or skill is None:
-                    continue
-                level_counter = level_skill_groups.setdefault(level, {})
-                level_counter[skill] = level_counter.get(skill, 0) + 1
+            all_skill_order_lists.append(r.skill_order)
 
         for item_id in r.items[:6]:
             if not item_id:
@@ -392,16 +426,12 @@ async def get_champion_build(
         stat["icon_urls"] = [ddragon.spell_icon_url(i) for i in stat["item_ids"]]
 
     skill_order_stats = to_stat_list(skill_order_groups, 4, lambda k: list(k))
+    for stat in skill_order_stats:
+        key = tuple(stat["item_ids"])
+        stat["full_order"] = compute_full_order(skill_order_group_rows.get(key, []))
 
-    # 레벨 1~18 각각에서 가장 많이 찍힌 스킬을 뽑아 "전체 스킬 빌드 순서" 그리드 데이터 생성
-    full_skill_order: list[str | None] = []
-    for level in range(1, 19):
-        counts = level_skill_groups.get(level)
-        if not counts:
-            full_skill_order.append(None)
-            continue
-        best_skill = max(counts.items(), key=lambda kv: kv[1])[0]
-        full_skill_order.append(best_skill)
+    # 전체 기준 기본 표시용 (특정 우선순위를 고르기 전 기본값)
+    full_skill_order = compute_full_order(all_skill_order_lists)
 
     boots_stats = to_stat_list(boots_groups, 4, lambda k: [k])
     for stat in boots_stats:

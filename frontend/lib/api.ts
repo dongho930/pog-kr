@@ -109,6 +109,7 @@ export interface ChampionSummary {
   champion_id: number;
   champion_name: string;
   champion_icon_url: string;
+  positions: string[];
 }
 
 export interface ParticipantRank {
@@ -127,6 +128,7 @@ export interface ChampionBuildStat {
   icon_urls?: (string | null)[] | null;
   primary_style_icon_url?: string | null;
   sub_style_icon_url?: string | null;
+  full_order?: (string | null)[] | null;
 }
 
 export interface ChampionBuild {

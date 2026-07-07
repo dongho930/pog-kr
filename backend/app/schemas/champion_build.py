@@ -12,6 +12,7 @@ class StatEntry(BaseModel):
     icon_urls: list[str | None] | None = None
     primary_style_icon_url: str | None = None
     sub_style_icon_url: str | None = None
+    full_order: list[str | None] | None = None  # 스킬 우선순위 항목 전용: 레벨별 전체 순서
 
 
 class ChampionBuildOut(BaseModel):
