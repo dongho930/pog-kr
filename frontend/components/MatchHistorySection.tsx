@@ -35,7 +35,17 @@ export function MatchHistorySection({ matches, puuid }: { matches: Match[]; puui
         <p className="text-sm text-text-muted">전적 기록이 없습니다.</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full border-separate border-spacing-y-2">
+          <table className="w-full border-separate border-spacing-y-2" style={{ tableLayout: "fixed" }}>
+            <colgroup>
+              <col style={{ width: "110px" }} />
+              <col style={{ width: "80px" }} />
+              <col style={{ width: "70px" }} />
+              <col style={{ width: "110px" }} />
+              <col style={{ width: "90px" }} />
+              <col style={{ width: "220px" }} />
+              <col style={{ width: "140px" }} />
+              <col style={{ width: "40px" }} />
+            </colgroup>
             <tbody>
               {filtered.map((m) => (
                 <MatchHistoryItem key={m.match_id} match={m} puuid={puuid} />
