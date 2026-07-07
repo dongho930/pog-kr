@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background-color: #0b0e14;
+  background-image:
+    radial-gradient(circle at 15% 0%, rgba(232, 179, 76, 0.08), transparent 40%),
+    radial-gradient(circle at 85% 20%, rgba(53, 196, 143, 0.06), transparent 40%);
+  color: #edeff4;
+}
+
+/* 숫자(KDA, 승률, LP 등)는 항상 표(tabular) 정렬 폭으로 — 표 형태 데이터가
+   많은 전적 사이트 특성상 정렬이 흔들리면 가독성이 크게 떨어진다. */
+.font-mono {
+  font-feature-settings: "tnum";
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

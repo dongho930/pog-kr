@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: pog-kr-backend
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false        # Supabase 연결 문자열 — Render 대시보드에서 직접 입력
+      - key: RIOT_API_KEY
+        sync: false        # Riot 개발자 포털에서 발급받은 키 — Render 대시보드에서 직접 입력
+      - key: RIOT_PLATFORM_REGION
+        value: kr
+      - key: RIOT_ACCOUNT_REGION
+        value: asia
+      - key: FRONTEND_ORIGIN
+        sync: false        # 예: https://pog-kr.vercel.app (배포 후 Vercel URL로 채우기)
+      - key: FRONTEND_ORIGIN_REGEX
+        value: "https://pog-kr.*\\.vercel\\.app"
