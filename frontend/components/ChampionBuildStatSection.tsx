@@ -74,7 +74,7 @@ export function StatSection({
   return (
     <section>
       <h2 className="mb-2 text-sm font-semibold text-text-muted">{title}</h2>
-      <div className="space-y-1.5">
+      <div className="space-y-1">
         {list.map((stat, i) => (
           <StatRow key={i} stat={stat} icons={renderIcons(stat)} label={renderLabel?.(stat)} />
         ))}

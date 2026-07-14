@@ -175,6 +175,12 @@ def is_boots(item_id: int) -> bool:
     return "Boots" in _ITEM_TAGS_CACHE.get(item_id, [])
 
 
+def is_trinket(item_id: int) -> bool:
+    if not item_id or not _ITEM_TAGS_CACHE:
+        return False
+    return "Trinket" in _ITEM_TAGS_CACHE.get(item_id, [])
+
+
 def is_support_quest_item(item_id: int) -> bool:
     if not item_id or not _ITEM_NAME_CACHE:
         return False

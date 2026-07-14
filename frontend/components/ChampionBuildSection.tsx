@@ -106,7 +106,7 @@ export function ChampionBuildSection({
       </div>
 
       {/* 티어 선택 (드롭다운) */}
-      <div className="relative mb-6 inline-block">
+      <div className="relative mb-3 inline-block">
         <button
           onClick={() => setTierOpen((v) => !v)}
           className="flex items-center gap-2 rounded-md border border-base-border bg-base-surface px-3 py-1.5 text-sm font-semibold text-text-primary"
@@ -152,13 +152,13 @@ export function ChampionBuildSection({
       ) : error ? (
         <p className="text-sm text-accent-loss">{error}</p>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           <p className="text-sm text-text-faint">
             이 조건의 매치 {build.games}경기 · 승률 {build.win_rate.toFixed(1)}%
           </p>
 
           <section>
-            <h2 className="mb-2 text-sm font-semibold text-text-muted">룬</h2>
+            <h2 className="mb-1.5 text-sm font-semibold text-text-muted">룬</h2>
             <RunePageGrid
               championId={championId}
               runePageStats={build.rune_page_stats}
@@ -172,7 +172,7 @@ export function ChampionBuildSection({
             />
           </section>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="space-y-3">
             <StatSection
               title="소환사 주문"
               stats={build.spell_stats}
@@ -186,7 +186,7 @@ export function ChampionBuildSection({
             />
 
             <section>
-              <h2 className="mb-2 text-sm font-semibold text-text-muted">스킬 빌드</h2>
+              <h2 className="mb-1.5 text-sm font-semibold text-text-muted">스킬 빌드</h2>
               <SkillBuildSection
                 skillOrderStats={build.skill_order_stats}
                 defaultFullOrder={build.full_skill_order}
@@ -194,7 +194,7 @@ export function ChampionBuildSection({
             </section>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             <StatSection
               title="신발"
               stats={build.boots_stats}

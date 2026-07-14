@@ -484,9 +484,10 @@ async def get_champion_build(
     core_item_groups: dict = {}
     starting_item_groups: dict = {}
 
-    # 시작 아이템으로 볼 구매 시점 기준 (초). 소환사 협곡은 보통 90초 이전에
-    # 상점 구매를 마치고 라인으로 향하므로, 그 이전 구매를 "시작 아이템"으로 본다.
-    STARTING_ITEM_CUTOFF_SECONDS = 90
+    # 시작 아이템으로 볼 구매 시점 기준 (초). 대부분의 시작 아이템 구매는
+    # 게임 시작 직후 30초 이내에 이뤄지므로, 그 이전 구매를 묶어서 "시작
+    # 아이템 조합"으로 본다 (장신구는 자동 지급이라 제외).
+    STARTING_ITEM_CUTOFF_SECONDS = 30
 
     for r in rows:
         runes = r.runes or {}
@@ -537,7 +538,9 @@ async def get_champion_build(
             sorted(
                 entry["item_id"]
                 for entry in (r.item_timeline or [])
-                if entry.get("item_id") and entry.get("timestamp", 9999) <= STARTING_ITEM_CUTOFF_SECONDS
+                if entry.get("item_id")
+                and not ddragon.is_trinket(entry["item_id"])
+                and entry.get("timestamp", 9999) <= STARTING_ITEM_CUTOFF_SECONDS
             )
         )
         if starting_items:
