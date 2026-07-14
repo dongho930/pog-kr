@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { api, ChampionStat } from "@/lib/api";
 import { SubModeTabs } from "./SubModeTabs";
 import { GlobalChampionTierTable } from "./GlobalChampionTierTable";
+import { POSITION_ICON } from "@/lib/positionIcons";
 
 const RANK_FILTERS = [
   { key: "ALL_RANK", label: "전체 랭크", queueIds: [420, 440] },
@@ -71,12 +72,20 @@ export function GlobalChampionStatsSection({ initialStats }: { initialStats: Cha
           <button
             key={p.key}
             onClick={() => setPositionKey(p.key)}
-            className={`flex-1 rounded-md px-4 py-2 text-sm font-semibold transition ${
+            className={`flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition ${
               positionKey === p.key
                 ? "bg-accent-gold text-[#171207]"
                 : "bg-base-surface text-text-muted hover:text-text-primary"
             }`}
           >
+            {p.position && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={POSITION_ICON[p.position]}
+                alt=""
+                className={`h-4 w-4 ${positionKey === p.key ? "" : "opacity-70"}`}
+              />
+            )}
             {p.label}
           </button>
         ))}

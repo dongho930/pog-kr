@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { ChampionSummary } from "@/lib/api";
+import { POSITION_ICON } from "@/lib/positionIcons";
 
 const POSITION_TABS = [
   { key: "ALL", label: "전체", position: null as string | null },
@@ -40,12 +41,20 @@ export function ChampionPickerSidebar({ champions }: { champions: ChampionSummar
           <button
             key={p.key}
             onClick={() => setPositionKey(p.key)}
-            className={`rounded-full px-2.5 py-1 text-xs font-medium transition ${
+            className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition ${
               positionKey === p.key
                 ? "bg-accent-gold text-[#171207]"
                 : "bg-base-elevated text-text-faint hover:text-text-primary"
             }`}
           >
+            {p.position && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={POSITION_ICON[p.position]}
+                alt=""
+                className={`h-3.5 w-3.5 ${positionKey === p.key ? "" : "opacity-70"}`}
+              />
+            )}
             {p.label}
           </button>
         ))}
