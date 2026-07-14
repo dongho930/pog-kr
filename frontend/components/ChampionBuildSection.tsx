@@ -172,25 +172,27 @@ export function ChampionBuildSection({
             />
           </section>
 
-          <StatSection
-            title="소환사 주문"
-            stats={build.spell_stats}
-            renderIcons={(s) => (
-              <>
-                {(s.icon_urls ?? []).map((url, i) => (
-                  <Icon key={i} url={url} size="h-9 w-9" />
-                ))}
-              </>
-            )}
-          />
-
-          <section>
-            <h2 className="mb-2 text-sm font-semibold text-text-muted">스킬 빌드</h2>
-            <SkillBuildSection
-              skillOrderStats={build.skill_order_stats}
-              defaultFullOrder={build.full_skill_order}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <StatSection
+              title="소환사 주문"
+              stats={build.spell_stats}
+              renderIcons={(s) => (
+                <>
+                  {(s.icon_urls ?? []).map((url, i) => (
+                    <Icon key={i} url={url} size="h-9 w-9" />
+                  ))}
+                </>
+              )}
             />
-          </section>
+
+            <section>
+              <h2 className="mb-2 text-sm font-semibold text-text-muted">스킬 빌드</h2>
+              <SkillBuildSection
+                skillOrderStats={build.skill_order_stats}
+                defaultFullOrder={build.full_skill_order}
+              />
+            </section>
+          </div>
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <StatSection
