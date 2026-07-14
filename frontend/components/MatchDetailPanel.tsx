@@ -127,6 +127,8 @@ function ParticipantRow({
 }) {
   const kda = p.deaths === 0 ? "Perfect" : ((p.kills + p.assists) / p.deaths).toFixed(2);
   const killParticipation = killParticipationOf(p, teamKills);
+  const gameName = p.game_name || rank?.game_name || "";
+  const tagLine = p.tag_line || rank?.tag_line || "";
 
   return (
     <tr
@@ -162,13 +164,13 @@ function ParticipantRow({
         <div className="rounded border border-base-border px-1.5 py-0.5">
           <SummonerNameLink
             puuid={p.puuid}
-            gameName={p.game_name}
-            tagLine={p.tag_line}
+            gameName={gameName}
+            tagLine={tagLine}
             stopPropagation
             className="text-text-primary hover:underline"
           >
-            {p.game_name || "(알 수 없음)"}
-            {p.tag_line && <span className="text-text-faint">#{p.tag_line}</span>}
+            {gameName || "(알 수 없음)"}
+            {tagLine && <span className="text-text-faint">#{tagLine}</span>}
           </SummonerNameLink>
           <p className={`text-xs ${tierColorClass(rank?.tier ?? null)}`}>
             {rank ? formatRank(rank.tier, rank.rank) : "불러오는 중..."}
@@ -467,17 +469,21 @@ export function MatchDetailPanel({ matchId, viewedPuuid }: { matchId: string; vi
               </tr>
             </thead>
             <tbody>
-              {[...blue, ...red].map((p) => (
+              {[...blue, ...red].map((p) => {
+                const rank = ranks.get(p.puuid);
+                const gameName = p.game_name || rank?.game_name || "";
+                const tagLine = p.tag_line || rank?.tag_line || "";
+                return (
                 <tr key={p.puuid} className="bg-base-surface">
                   <td className="rounded-l-card px-2 py-1.5 text-text-primary">
                     <SummonerNameLink
                       puuid={p.puuid}
-                      gameName={p.game_name}
-                      tagLine={p.tag_line}
+                      gameName={gameName}
+                      tagLine={tagLine}
                       className="hover:underline"
                     >
-                      {p.game_name || "(알 수 없음)"}
-                      {p.tag_line && `#${p.tag_line}`}
+                      {gameName || "(알 수 없음)"}
+                      {tagLine && `#${tagLine}`}
                     </SummonerNameLink>
                   </td>
                   <td className="px-2 py-1.5 font-mono text-text-muted">
@@ -495,7 +501,8 @@ export function MatchDetailPanel({ matchId, viewedPuuid }: { matchId: string; vi
                     {p.double_kills}/{p.triple_kills}/{p.quadra_kills}/{p.penta_kills}
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

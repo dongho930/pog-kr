@@ -86,9 +86,32 @@ async def get_match_participant_ranks(match_id: str, db: AsyncSession = Depends(
     results: list[dict] = []
     for p in match.participants:
         cached = await crud_summoner.get_by_puuid(db, p.puuid)
+
+        # 게임명/태그 확보: 매치 기록에 있으면 그대로 쓰고, 없으면 캐시 ->
+        # Riot API(puuid로 계정 역조회) 순으로 보완해서 최대한 빈 태그가
+        # 남지 않도록 한다.
+        game_name = p.game_name or (cached.game_name if cached else "")
+        tag_line = p.tag_line or (cached.tag_line if cached else "")
+        if not (game_name and tag_line):
+            try:
+                account = await riot_api.get_account_by_puuid(p.puuid)
+                game_name = account.get("gameName") or game_name
+                tag_line = account.get("tagLine") or tag_line
+                if game_name and tag_line:
+                    await crud_summoner.cache_name_only(db, p.puuid, game_name, tag_line, "kr")
+            except riot_api.RiotAPIError:
+                pass  # 탈퇴된 계정 등으로 역조회가 안 되면 빈 값 그대로 둔다.
+
         if cached and cached.solo_tier is not None:
             results.append(
-                {"puuid": p.puuid, "tier": cached.solo_tier, "rank": cached.solo_rank, "level": cached.summoner_level}
+                {
+                    "puuid": p.puuid,
+                    "tier": cached.solo_tier,
+                    "rank": cached.solo_rank,
+                    "level": cached.summoner_level,
+                    "game_name": game_name,
+                    "tag_line": tag_line,
+                }
             )
             continue
 
@@ -96,7 +119,16 @@ async def get_match_participant_ranks(match_id: str, db: AsyncSession = Depends(
             summoner_info = await riot_api.get_summoner_by_puuid(p.puuid)
             league_entries = await riot_api.get_league_entries(p.puuid)
         except riot_api.RiotAPIError:
-            results.append({"puuid": p.puuid, "tier": None, "rank": None, "level": None})
+            results.append(
+                {
+                    "puuid": p.puuid,
+                    "tier": None,
+                    "rank": None,
+                    "level": None,
+                    "game_name": game_name,
+                    "tag_line": tag_line,
+                }
+            )
             continue
 
         solo = next(
@@ -105,8 +137,8 @@ async def get_match_participant_ranks(match_id: str, db: AsyncSession = Depends(
         )
         data = {
             "puuid": p.puuid,
-            "game_name": p.game_name or (cached.game_name if cached else ""),
-            "tag_line": p.tag_line or (cached.tag_line if cached else ""),
+            "game_name": game_name,
+            "tag_line": tag_line,
             "platform_region": "kr",
             "profile_icon_id": summoner_info.get("profileIconId", 0),
             "summoner_level": summoner_info.get("summonerLevel", 1),
@@ -123,6 +155,8 @@ async def get_match_participant_ranks(match_id: str, db: AsyncSession = Depends(
                 "tier": summoner.solo_tier,
                 "rank": summoner.solo_rank,
                 "level": summoner.summoner_level,
+                "game_name": summoner.game_name,
+                "tag_line": summoner.tag_line,
             }
         )
 

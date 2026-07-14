@@ -143,6 +143,8 @@ export interface ParticipantRank {
   tier: string | null;
   rank: string | null;
   level: number | null;
+  game_name?: string | null;
+  tag_line?: string | null;
 }
 
 export interface ChampionBuildStat {
