@@ -482,6 +482,11 @@ async def get_champion_build(
     boots_groups: dict = {}
     trinket_groups: dict = {}
     core_item_groups: dict = {}
+    starting_item_groups: dict = {}
+
+    # 시작 아이템으로 볼 구매 시점 기준 (초). 소환사 협곡은 보통 90초 이전에
+    # 상점 구매를 마치고 라인으로 향하므로, 그 이전 구매를 "시작 아이템"으로 본다.
+    STARTING_ITEM_CUTOFF_SECONDS = 90
 
     for r in rows:
         runes = r.runes or {}
@@ -527,6 +532,16 @@ async def get_champion_build(
                 add(core_item_groups, item_id, r.win)
         if r.items[6]:
             add(trinket_groups, r.items[6], r.win)
+
+        starting_items = tuple(
+            sorted(
+                entry["item_id"]
+                for entry in (r.item_timeline or [])
+                if entry.get("item_id") and entry.get("timestamp", 9999) <= STARTING_ITEM_CUTOFF_SECONDS
+            )
+        )
+        if starting_items:
+            add(starting_item_groups, starting_items, r.win)
 
     rune_page_stats = to_stat_list(rune_page_groups, 3, lambda k: list(k))
     for stat in rune_page_stats:
@@ -578,6 +593,10 @@ async def get_champion_build(
     for stat in core_item_stats:
         stat["icon_url"] = ddragon.item_icon_url(stat["item_ids"][0])
 
+    starting_item_stats = to_stat_list(starting_item_groups, 6, lambda k: list(k))
+    for stat in starting_item_stats:
+        stat["icon_urls"] = [ddragon.item_icon_url(i) for i in stat["item_ids"]]
+
     return {
         "champion_id": champion_id,
         "champion_name": name_map.get(champion_id, f"챔피언 {champion_id}"),
@@ -596,4 +615,5 @@ async def get_champion_build(
         "boots_stats": boots_stats,
         "trinket_stats": trinket_stats,
         "core_item_stats": core_item_stats,
+        "starting_item_stats": starting_item_stats,
     }

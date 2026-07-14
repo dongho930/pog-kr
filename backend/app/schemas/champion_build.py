@@ -60,3 +60,4 @@ class ChampionBuildOut(BaseModel):
     boots_stats: list[StatEntry]
     trinket_stats: list[StatEntry]
     core_item_stats: list[StatEntry]
+    starting_item_stats: list[StatEntry]

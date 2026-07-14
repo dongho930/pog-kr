@@ -9,7 +9,7 @@ export function SkillBuildGrid({ fullSkillOrder }: { fullSkillOrder?: (string | 
 
   return (
     <div className="overflow-x-auto">
-      <div className="inline-grid grid-cols-[2rem_repeat(18,minmax(1.75rem,1fr))] gap-1">
+      <div className="inline-grid grid-cols-[2rem_repeat(18,1.75rem)] gap-1">
         {SKILLS.map((skill) => (
           <div key={skill} className="contents">
             <div className="flex items-center justify-center font-display text-sm font-bold text-accent-gold">

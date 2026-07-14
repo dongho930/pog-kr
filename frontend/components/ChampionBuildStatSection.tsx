@@ -10,10 +10,14 @@ function StatRow({
   label?: string;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-md border border-base-border bg-base-elevated px-3 py-2">
+    <div
+      className={`flex items-center gap-3 rounded-md border border-base-border bg-base-elevated px-3 py-2 ${
+        label ? "" : "justify-between"
+      }`}
+    >
       <div className="flex shrink-0 items-center gap-1">{icons}</div>
       {label && <span className="flex-1 truncate text-sm text-text-primary">{label}</span>}
-      <div className={`flex shrink-0 items-center gap-4 ${label ? "" : "ml-3"}`}>
+      <div className="flex shrink-0 items-center gap-4">
         <div className="w-12 text-right">
           <p className="text-xs text-text-faint">게임</p>
           <p className="font-mono text-sm text-text-muted">{stat.games.toLocaleString()}</p>

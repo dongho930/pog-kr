@@ -175,6 +175,7 @@ export interface ChampionBuild {
   boots_stats: ChampionBuildStat[];
   trinket_stats: ChampionBuildStat[];
   core_item_stats: ChampionBuildStat[];
+  starting_item_stats: ChampionBuildStat[];
 }
 
 export interface LeaderboardEntry {

@@ -194,7 +194,7 @@ export function ChampionBuildSection({
             </section>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             <StatSection
               title="신발"
               stats={build.boots_stats}
@@ -204,6 +204,17 @@ export function ChampionBuildSection({
               title="장신구"
               stats={build.trinket_stats}
               renderIcons={(s) => <Icon url={s.icon_url} size="h-9 w-9" />}
+            />
+            <StatSection
+              title="시작 아이템"
+              stats={build.starting_item_stats}
+              renderIcons={(s) => (
+                <>
+                  {(s.icon_urls ?? []).map((url, i) => (
+                    <Icon key={i} url={url} size="h-9 w-9" />
+                  ))}
+                </>
+              )}
             />
           </div>
 
