@@ -112,6 +112,29 @@ export interface ChampionSummary {
   positions: string[];
 }
 
+export interface RuneOption {
+  rune_id: number;
+  icon_url: string | null;
+  chosen: boolean;
+}
+
+export interface RuneRow {
+  options: RuneOption[];
+}
+
+export interface ChampionRunePageDetail {
+  champion_id: number;
+  primary_style: number;
+  primary_style_icon_url: string | null;
+  sub_style: number;
+  sub_style_icon_url: string | null;
+  all_style_ids: number[];
+  all_style_icon_urls: Record<string, string | null>;
+  primary_rows: RuneRow[];
+  secondary_rows: RuneRow[];
+  games: number;
+}
+
 export interface ParticipantRank {
   puuid: string;
   tier: string | null;
@@ -225,5 +248,21 @@ export const api = {
     if (options?.tier) params.set("tier", options.tier);
     const qs = params.toString();
     return apiFetch<ChampionBuild>(`/champions/${championId}/build${qs ? `?${qs}` : ""}`);
+  },
+  getChampionRunePageDetail: (
+    championId: number,
+    primaryStyle: number,
+    subStyle: number,
+    options?: { position?: string; queueIds?: number[]; tier?: string }
+  ) => {
+    const params = new URLSearchParams();
+    params.set("primary_style", String(primaryStyle));
+    params.set("sub_style", String(subStyle));
+    if (options?.position) params.set("position", options.position);
+    if (options?.queueIds?.length) params.set("queue_ids", options.queueIds.join(","));
+    if (options?.tier) params.set("tier", options.tier);
+    return apiFetch<ChampionRunePageDetail>(
+      `/champions/${championId}/rune-page?${params.toString()}`
+    );
   },
 };

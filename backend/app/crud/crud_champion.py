@@ -225,6 +225,116 @@ async def get_aggregated_stats(
     return results
 
 
+async def get_champion_rune_page_detail(
+    db: AsyncSession,
+    champion_id: int,
+    primary_style: int,
+    sub_style: int,
+    position: str | None = None,
+    queue_ids: list[int] | None = None,
+    tier: str | None = None,
+    sample_limit: int = 500,
+) -> dict | None:
+    """
+    특정 룬 페이지 조합(주 룬트리 + 보조 룬트리)에서, 실제 클라이언트 룬
+    페이지 화면처럼 "이 조합에서 각 줄마다 어떤 룬을 골랐는지"를 계산한다.
+    주 룬트리는 4줄(키스톤+3슬롯) 전부, 보조 룬트리는 실제로 고른 3개 줄
+    중 2개 줄만 표시 대상이 된다.
+    """
+    from collections import Counter
+
+    query = select(MatchParticipant).where(MatchParticipant.champion_id == champion_id)
+    if position:
+        query = query.where(MatchParticipant.team_position == position)
+    if queue_ids:
+        query = query.join(Match, Match.id == MatchParticipant.match_id).where(
+            Match.queue_id.in_(queue_ids)
+        )
+    if tier and tier.upper() != "ALL":
+        tier_upper = tier.upper()
+        is_plus = tier_upper.endswith("_PLUS")
+        base_tier = tier_upper[: -len("_PLUS")] if is_plus else tier_upper
+        if base_tier not in TIER_ORDER:
+            raise ValueError(f"지원하지 않는 티어입니다: {tier}")
+        target_rank = TIER_ORDER.index(base_tier)
+        tier_rank_case = case(
+            {t: i for i, t in enumerate(TIER_ORDER)},
+            value=MatchParticipant.tier_at_sync,
+            else_=-1,
+        )
+        if is_plus:
+            query = query.where(tier_rank_case >= target_rank)
+        else:
+            query = query.where(tier_rank_case == target_rank)
+    query = query.limit(sample_limit)
+
+    rows = list((await db.execute(query)).scalars().all())
+    filtered = [
+        r
+        for r in rows
+        if (r.runes or {}).get("primary_style") == primary_style
+        and (r.runes or {}).get("sub_style") == sub_style
+    ]
+    if not filtered:
+        return None
+
+    # 주 룬트리: 4줄 전부, 각 줄에서 가장 많이 선택된 룬을 "선택됨"으로 표시
+    primary_structure = ddragon.get_rune_tree_structure(primary_style)
+    primary_rows: list[dict] = []
+    for row_idx, row_rune_ids in enumerate(primary_structure):
+        picks = []
+        for r in filtered:
+            runes = r.runes or {}
+            if row_idx == 0:
+                picks.append(runes.get("keystone"))
+            else:
+                primary_runes = runes.get("primary_runes", [])
+                picks.append(primary_runes[row_idx] if len(primary_runes) > row_idx else None)
+        picks = [p for p in picks if p is not None]
+        chosen_id = Counter(picks).most_common(1)[0][0] if picks else None
+        primary_rows.append(
+            {
+                "options": [
+                    {"rune_id": rid, "icon_url": ddragon.rune_icon_url(rid), "chosen": rid == chosen_id}
+                    for rid in row_rune_ids
+                ]
+            }
+        )
+
+    # 보조 룬트리: 키스톤 줄(0번)은 보조에서 고를 수 없으니 제외. 실제로
+    # 가장 많이 선택된 룬 2개가 속한 줄만 "선택됨" 표시.
+    sub_structure = ddragon.get_rune_tree_structure(sub_style)[1:]
+    all_secondary_picks: list[int] = []
+    for r in filtered:
+        all_secondary_picks.extend((r.runes or {}).get("secondary_runes", []))
+    top2 = {rid for rid, _ in Counter(all_secondary_picks).most_common(2)}
+
+    secondary_rows: list[dict] = []
+    for row_rune_ids in sub_structure:
+        secondary_rows.append(
+            {
+                "options": [
+                    {"rune_id": rid, "icon_url": ddragon.rune_icon_url(rid), "chosen": rid in top2}
+                    for rid in row_rune_ids
+                ]
+            }
+        )
+
+    all_style_ids = ddragon.all_rune_style_ids()
+    return {
+        "champion_id": champion_id,
+        "primary_style": primary_style,
+        "primary_style_icon_url": ddragon.rune_style_icon_url(primary_style),
+        "sub_style": sub_style,
+        "sub_style_icon_url": ddragon.rune_style_icon_url(sub_style),
+        "all_style_ids": all_style_ids,
+        "all_style_icon_urls": {sid: ddragon.rune_style_icon_url(sid) for sid in all_style_ids},
+        "primary_rows": primary_rows,
+        "secondary_rows": secondary_rows,
+        "games": len(filtered),
+    }
+
+
 async def get_champion_build(
     db: AsyncSession,
     champion_id: int,

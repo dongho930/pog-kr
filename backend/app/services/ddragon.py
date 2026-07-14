@@ -13,6 +13,7 @@ _VERSION_CACHE: str | None = None
 _SPELL_ICON_CACHE: dict[int, str] | None = None
 _RUNE_ICON_CACHE: dict[int, str] | None = None
 _RUNE_STYLE_ICON_CACHE: dict[int, str] | None = None  # 룬트리(주/보조) 자체의 아이콘
+_RUNE_TREE_STRUCTURE: dict[int, list[list[int]]] | None = None  # style_id -> [줄1(키스톤), 줄2, 줄3, 줄4]
 _ITEM_TAGS_CACHE: dict[int, list[str]] | None = None  # 아이템 ID -> 태그 목록 (예: ["Boots"])
 _ITEM_NAME_CACHE: dict[int, str] | None = None  # 아이템 ID -> 한글 이름
 
@@ -97,12 +98,12 @@ async def refresh_spell_icons() -> None:
 
 
 async def refresh_rune_icons() -> None:
-    """룬(perk) ID -> 아이콘 URL, 룬트리(style) ID -> 아이콘 URL을 캐싱한다
-    (Data Dragon runesReforged.json).
+    """룬(perk) ID -> 아이콘 URL, 룬트리(style) ID -> 아이콘 URL, 룬트리 전체
+    구조(줄별 룬 목록)를 캐싱한다 (Data Dragon runesReforged.json).
 
     주의: 룬 이미지는 다른 자산과 달리 패치 버전 없이 /cdn/img/ 경로로 제공된다.
     """
-    global _RUNE_ICON_CACHE, _RUNE_STYLE_ICON_CACHE
+    global _RUNE_ICON_CACHE, _RUNE_STYLE_ICON_CACHE, _RUNE_TREE_STRUCTURE
     url = f"https://ddragon.leagueoflegends.com/cdn/{_current_version()}/data/en_US/runesReforged.json"
     try:
         async with httpx.AsyncClient() as client:
@@ -111,16 +112,24 @@ async def refresh_rune_icons() -> None:
             styles = resp.json()
         icons: dict[int, str] = {}
         style_icons: dict[int, str] = {}
+        tree_structure: dict[int, list[list[int]]] = {}
         for style in styles:
             style_icons[style["id"]] = f"https://ddragon.leagueoflegends.com/cdn/img/{style['icon']}"
+            rows: list[list[int]] = []
             for slot in style.get("slots", []):
+                row_ids: list[int] = []
                 for rune in slot.get("runes", []):
                     icons[rune["id"]] = f"https://ddragon.leagueoflegends.com/cdn/img/{rune['icon']}"
+                    row_ids.append(rune["id"])
+                rows.append(row_ids)
+            tree_structure[style["id"]] = rows
         _RUNE_ICON_CACHE = icons
         _RUNE_STYLE_ICON_CACHE = style_icons
+        _RUNE_TREE_STRUCTURE = tree_structure
     except (httpx.HTTPError, KeyError, ValueError):
         _RUNE_ICON_CACHE = {}
         _RUNE_STYLE_ICON_CACHE = {}
+        _RUNE_TREE_STRUCTURE = {}
 
 
 async def refresh_item_tags() -> None:
@@ -209,6 +218,20 @@ def rune_style_icon_url(style_id: int | None) -> str | None:
     if _RUNE_STYLE_ICON_CACHE and style_id in _RUNE_STYLE_ICON_CACHE:
         return _RUNE_STYLE_ICON_CACHE[style_id]
     return _RUNE_STYLE_FALLBACK.get(style_id)
+
+
+def get_rune_tree_structure(style_id: int) -> list[list[int]]:
+    """해당 룬트리의 줄별 룬 ID 목록 (줄1=키스톤, 줄2~4=보조 슬롯). 없으면 빈 리스트."""
+    if not _RUNE_TREE_STRUCTURE:
+        return []
+    return _RUNE_TREE_STRUCTURE.get(style_id, [])
+
+
+def all_rune_style_ids() -> list[int]:
+    """존재하는 모든 룬트리 ID (보통 5개: 정밀/지배/마법/결의/영감)."""
+    if _RUNE_STYLE_FALLBACK:
+        return list(_RUNE_STYLE_FALLBACK.keys())
+    return list((_RUNE_TREE_STRUCTURE or {}).keys())
 
 
 def _current_version() -> str:

@@ -15,6 +15,29 @@ class StatEntry(BaseModel):
     full_order: list[str | None] | None = None  # 스킬 우선순위 항목 전용: 레벨별 전체 순서
 
 
+class RuneOptionOut(BaseModel):
+    rune_id: int
+    icon_url: str | None
+    chosen: bool
+
+
+class RuneRowOut(BaseModel):
+    options: list[RuneOptionOut]
+
+
+class ChampionRunePageDetailOut(BaseModel):
+    champion_id: int
+    primary_style: int
+    primary_style_icon_url: str | None
+    sub_style: int
+    sub_style_icon_url: str | None
+    all_style_ids: list[int]
+    all_style_icon_urls: dict[int, str | None]
+    primary_rows: list[RuneRowOut]
+    secondary_rows: list[RuneRowOut]
+    games: int
+
+
 class ChampionBuildOut(BaseModel):
     champion_id: int
     champion_name: str

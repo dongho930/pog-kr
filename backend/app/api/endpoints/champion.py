@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.crud import crud_champion
 from app.schemas.champion import ChampionStatOut, ChampionSummaryOut
-from app.schemas.champion_build import ChampionBuildOut
+from app.schemas.champion_build import ChampionBuildOut, ChampionRunePageDetailOut
 from app.services import ddragon
 
 logger = logging.getLogger(__name__)
@@ -141,3 +141,42 @@ async def get_champion_build(
     if build is None:
         raise HTTPException(404, "아직 이 챔피언의 매치 데이터가 없습니다")
     return build
+
+
+@router.get("/{champion_id}/rune-page", response_model=ChampionRunePageDetailOut)
+async def get_champion_rune_page_detail(
+    champion_id: int,
+    primary_style: int = Query(..., description="주 룬트리 style ID (예: 8100 = 지배)"),
+    sub_style: int = Query(..., description="보조 룬트리 style ID (예: 8000 = 정밀)"),
+    position: str | None = Query(default=None, description="TOP/JUNGLE/MIDDLE/BOTTOM/UTILITY"),
+    queue_ids: str | None = Query(default=None, description="쉼표로 구분된 queue id 목록"),
+    tier: str | None = Query(default=None, description="예: GOLD_PLUS, GOLD, ALL"),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    특정 룬 페이지 조합(주+보조 룬트리)에서, 실제 클라이언트 룬 페이지처럼
+    각 줄마다 어떤 룬을 골랐는지 보여준다. 챔피언 빌드 페이지에서 룬 페이지
+    요약 박스를 클릭했을 때 쓰는 상세 화면용.
+    """
+    parsed_queue_ids = None
+    if queue_ids:
+        try:
+            parsed_queue_ids = [int(q) for q in queue_ids.split(",") if q.strip()]
+        except ValueError:
+            raise HTTPException(400, "queue_ids는 쉼표로 구분된 숫자여야 합니다")
+
+    try:
+        detail = await crud_champion.get_champion_rune_page_detail(
+            db, champion_id, primary_style, sub_style, position, parsed_queue_ids, tier
+        )
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
+    except Exception as e:
+        logger.exception(
+            "룬 페이지 상세 조회 중 예상하지 못한 오류 (champion_id=%s)", champion_id
+        )
+        raise HTTPException(500, f"룬 페이지 상세를 불러오는 중 오류가 발생했습니다: {e}") from e
+
+    if detail is None:
+        raise HTTPException(404, "이 조합으로 플레이한 매치 데이터가 없습니다")
+    return detail

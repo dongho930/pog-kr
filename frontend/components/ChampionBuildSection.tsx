@@ -160,12 +160,15 @@ export function ChampionBuildSection({
           <section>
             <h2 className="mb-2 text-sm font-semibold text-text-muted">룬</h2>
             <RunePageGrid
+              championId={championId}
               runePageStats={build.rune_page_stats}
               keystoneStats={build.keystone_stats}
               primarySlot1Stats={build.primary_slot1_stats}
               primarySlot2Stats={build.primary_slot2_stats}
               primarySlot3Stats={build.primary_slot3_stats}
               secondaryRuneStats={build.secondary_rune_stats}
+              queueIds={QUEUE_OPTIONS.find((q) => q.key === queueKey)?.queueIds}
+              tier={tierKey === "ALL" ? undefined : tierKey}
             />
           </section>
 
