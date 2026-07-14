@@ -485,9 +485,9 @@ async def get_champion_build(
     starting_item_groups: dict = {}
 
     # 시작 아이템으로 볼 구매 시점 기준 (초). 대부분의 시작 아이템 구매는
-    # 게임 시작 직후 30초 이내에 이뤄지므로, 그 이전 구매를 묶어서 "시작
+    # 게임 시작 직후 90초 이내에 이뤄지므로, 그 이전 구매를 묶어서 "시작
     # 아이템 조합"으로 본다 (장신구는 자동 지급이라 제외).
-    STARTING_ITEM_CUTOFF_SECONDS = 30
+    STARTING_ITEM_CUTOFF_SECONDS = 90
 
     for r in rows:
         runes = r.runes or {}
@@ -534,14 +534,20 @@ async def get_champion_build(
         if r.items[6]:
             add(trinket_groups, r.items[6], r.win)
 
-        starting_items = tuple(
-            sorted(
-                entry["item_id"]
+        early_purchases = sorted(
+            (
+                entry
                 for entry in (r.item_timeline or [])
                 if entry.get("item_id")
                 and not ddragon.is_trinket(entry["item_id"])
                 and entry.get("timestamp", 9999) <= STARTING_ITEM_CUTOFF_SECONDS
-            )
+            ),
+            key=lambda entry: entry.get("timestamp", 0),
+        )
+        # 소모품 재구매/리메이크 등으로 구매 이벤트가 비정상적으로 많이 쌓이는
+        # 경우가 있어, 실제 시작 아이템 세팅 범위(보통 최대 4개)로 제한한다.
+        starting_items = tuple(
+            sorted(entry["item_id"] for entry in early_purchases[:4])
         )
         if starting_items:
             add(starting_item_groups, starting_items, r.win)

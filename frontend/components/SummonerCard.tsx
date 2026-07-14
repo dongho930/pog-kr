@@ -1,5 +1,6 @@
 import { Summoner } from "@/lib/api";
 import { FormStreak } from "./FormStreak";
+import { tierEmblemUrl } from "@/lib/rankIcons";
 
 export function SummonerCard({
   summoner,
@@ -10,6 +11,7 @@ export function SummonerCard({
 }) {
   const total = summoner.solo_wins + summoner.solo_losses;
   const winRate = total ? Math.round((summoner.solo_wins / total) * 1000) / 10 : 0;
+  const emblemUrl = tierEmblemUrl(summoner.solo_tier);
 
   return (
     <div className="rounded-card border border-base-border bg-base-surface p-5">
@@ -30,11 +32,17 @@ export function SummonerCard({
       </div>
 
       <div className="mt-5 flex items-center justify-between rounded-md bg-base-elevated px-3 py-2.5">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-text-faint">솔로랭크</p>
-          <p className="font-display font-semibold text-accent-gold">
-            {summoner.solo_tier ?? "언랭크"} {summoner.solo_rank ?? ""}
-          </p>
+        <div className="flex items-center gap-2.5">
+          {emblemUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={emblemUrl} alt="" className="h-10 w-10 shrink-0 object-contain" />
+          )}
+          <div>
+            <p className="text-xs uppercase tracking-wide text-text-faint">솔로랭크</p>
+            <p className="font-display font-semibold text-accent-gold">
+              {summoner.solo_tier ?? "언랭크"} {summoner.solo_rank ?? ""}
+            </p>
+          </div>
         </div>
         <div className="text-right font-mono">
           <p className="text-sm text-text-primary">{summoner.solo_lp} LP</p>
