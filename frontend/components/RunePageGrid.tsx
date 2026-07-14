@@ -44,7 +44,7 @@ function RunePageSummaryCard({
         <p className="font-mono text-lg font-bold text-text-primary">
           {stat.pick_rate.toFixed(2)}%
         </p>
-        <p className="font-mono text-xs text-text-faint">{stat.games.toLocaleString()} 게임</p>
+        <p className="font-mono text-xs font-bold text-text-primary">{stat.games.toLocaleString()} 게임</p>
       </div>
       <p className="ml-2 font-mono text-base font-bold text-accent-win">
         {stat.win_rate.toFixed(2)}%
