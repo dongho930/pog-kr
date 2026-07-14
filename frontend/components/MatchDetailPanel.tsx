@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { api, Match, MatchParticipant, ParticipantRank, TeamObjectives } from "@/lib/api";
 import { BuildTimeline } from "./BuildTimeline";
+import { SummonerNameLink } from "./SummonerNameLink";
 
 const POSITION_ORDER = ["TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY"];
 
@@ -21,11 +21,6 @@ const TIER_KOREAN: Record<string, string> = {
 };
 
 const RANK_ROMAN: Record<string, string> = { I: "1", II: "2", III: "3", IV: "4" };
-
-/** 매치 상세에서 다른 플레이어를 눌렀을 때 그 소환사의 검색(프로필) 페이지로 이동하기 위한 링크. */
-function summonerHref(gameName: string, tagLine: string): string {
-  return `/summoners/kr/${encodeURIComponent(gameName)}-${encodeURIComponent(tagLine)}`;
-}
 
 // 이미지1(공식 티어 엠블럼) 색상을 참고한 티어별 텍스트 색상
 const TIER_COLOR: Record<string, string> = {
@@ -165,18 +160,16 @@ function ParticipantRow({
 
       <td className="whitespace-nowrap p-1.5">
         <div className="rounded border border-base-border px-1.5 py-0.5">
-          {p.game_name && p.tag_line ? (
-            <Link
-              href={summonerHref(p.game_name, p.tag_line)}
-              onClick={(e) => e.stopPropagation()}
-              className="text-text-primary hover:underline"
-            >
-              {p.game_name}
-              <span className="text-text-faint">#{p.tag_line}</span>
-            </Link>
-          ) : (
-            <p className="text-text-primary">{p.game_name || "(알 수 없음)"}</p>
-          )}
+          <SummonerNameLink
+            puuid={p.puuid}
+            gameName={p.game_name}
+            tagLine={p.tag_line}
+            stopPropagation
+            className="text-text-primary hover:underline"
+          >
+            {p.game_name || "(알 수 없음)"}
+            {p.tag_line && <span className="text-text-faint">#{p.tag_line}</span>}
+          </SummonerNameLink>
           <p className={`text-xs ${tierColorClass(rank?.tier ?? null)}`}>
             {rank ? formatRank(rank.tier, rank.rank) : "불러오는 중..."}
           </p>
@@ -477,13 +470,15 @@ export function MatchDetailPanel({ matchId, viewedPuuid }: { matchId: string; vi
               {[...blue, ...red].map((p) => (
                 <tr key={p.puuid} className="bg-base-surface">
                   <td className="rounded-l-card px-2 py-1.5 text-text-primary">
-                    {p.game_name && p.tag_line ? (
-                      <Link href={summonerHref(p.game_name, p.tag_line)} className="hover:underline">
-                        {p.game_name}#{p.tag_line}
-                      </Link>
-                    ) : (
-                      p.game_name || "(알 수 없음)"
-                    )}
+                    <SummonerNameLink
+                      puuid={p.puuid}
+                      gameName={p.game_name}
+                      tagLine={p.tag_line}
+                      className="hover:underline"
+                    >
+                      {p.game_name || "(알 수 없음)"}
+                      {p.tag_line && `#${p.tag_line}`}
+                    </SummonerNameLink>
                   </td>
                   <td className="px-2 py-1.5 font-mono text-text-muted">
                     {killParticipationOf(p, p.team_id === 100 ? totalKillsBlue : totalKillsRed)}%

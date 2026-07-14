@@ -224,6 +224,10 @@ export const api = {
     apiFetch<Summoner>(
       `/summoners/${region}/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`
     ),
+  resolveRiotIdByPuuid: (puuid: string) =>
+    apiFetch<{ game_name: string; tag_line: string }>(
+      `/summoners/by-puuid/${encodeURIComponent(puuid)}/riot-id`
+    ),
   getMatchHistory: (puuid: string, count = 20) =>
     apiFetch<Match[]>(`/summoners/${puuid}/matches?count=${count}`),
   getMatchDetail: (matchId: string) => apiFetch<Match>(`/matches/${matchId}`),
