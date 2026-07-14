@@ -1,40 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api, ChampionBuildStat, ChampionRunePageDetail } from "@/lib/api";
 import { RunePageDetailView } from "./RunePageDetailView";
-
-function RuneOptionCard({ stat }: { stat: ChampionBuildStat }) {
-  const url = stat.icon_url;
-  return (
-    <div className="flex w-16 flex-col items-center gap-1">
-      <div className="h-9 w-9 overflow-hidden rounded-full border border-base-border bg-base-elevated">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        {url && <img src={url} alt="" className="h-full w-full object-cover" />}
-      </div>
-      <p
-        className={`font-mono text-xs font-bold ${
-          stat.win_rate >= 50 ? "text-accent-win" : "text-accent-loss"
-        }`}
-      >
-        {stat.win_rate.toFixed(1)}%
-      </p>
-      <p className="font-mono text-[10px] text-text-faint">{stat.pick_rate.toFixed(1)}%</p>
-      <p className="font-mono text-[10px] text-text-faint">{stat.games.toLocaleString()}</p>
-    </div>
-  );
-}
-
-function RuneSlotRow({ stats }: { stats: ChampionBuildStat[] }) {
-  if (stats.length === 0) return null;
-  return (
-    <div className="flex gap-3">
-      {stats.map((stat, i) => (
-        <RuneOptionCard key={i} stat={stat} />
-      ))}
-    </div>
-  );
-}
 
 function RunePageSummaryCard({
   stat,
@@ -88,11 +56,6 @@ function RunePageSummaryCard({
 export function RunePageGrid({
   championId,
   runePageStats,
-  keystoneStats,
-  primarySlot1Stats,
-  primarySlot2Stats,
-  primarySlot3Stats,
-  secondaryRuneStats,
   position,
   queueIds,
   tier,
@@ -112,20 +75,14 @@ export function RunePageGrid({
   // 정렬되어 온다 (pick_rate = games / total_games 라 순서가 동일함).
   const topStats = runePageStats.slice(0, 2);
 
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const [detail, setDetail] = useState<ChampionRunePageDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function handleSelect(index: number) {
-    if (selectedIndex === index) {
-      // 다시 누르면 닫기
-      setSelectedIndex(null);
-      setDetail(null);
-      return;
-    }
-    setSelectedIndex(index);
+  function loadDetail(index: number) {
     const stat = topStats[index];
+    if (!stat) return;
     const [primaryStyle, subStyle] = stat.item_ids as number[];
     setLoading(true);
     setError(null);
@@ -136,9 +93,23 @@ export function RunePageGrid({
       .finally(() => setLoading(false));
   }
 
+  // 페이지 진입 시(또는 필터가 바뀌어 목록이 바뀔 때) 자동으로 1순위 조합을 보여준다 —
+  // 별도의 "집계 요약" 화면 없이 바로 실제 클라이언트 스타일 상세 화면이 뜨도록.
+  useEffect(() => {
+    setSelectedIndex(0);
+    loadDetail(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [championId, runePageStats, position, queueIds, tier]);
+
+  function handleSelect(index: number) {
+    if (selectedIndex === index) return;
+    setSelectedIndex(index);
+    loadDetail(index);
+  }
+
   return (
     <div>
-      {/* 가장 많이 쓰인 룬 페이지 조합 요약 (픽률 높은 순 — 클릭하면 상세 룬 페이지 표시) */}
+      {/* 룬 페이지 조합 요약 (픽률 높은 순 — 클릭하면 그 조합의 상세 룬 페이지로 전환) */}
       <div className="mb-4 flex flex-wrap gap-3">
         {topStats.map((stat, i) => (
           <RunePageSummaryCard
@@ -151,34 +122,13 @@ export function RunePageGrid({
         ))}
       </div>
 
-      {selectedIndex !== null ? (
-        loading ? (
-          <p className="text-sm text-text-muted">불러오는 중...</p>
-        ) : error ? (
-          <p className="text-sm text-accent-loss">{error}</p>
-        ) : detail ? (
-          <RunePageDetailView detail={detail} />
-        ) : null
-      ) : (
-        /* 트리별 슬롯 행 (주룬: 키스톤+3슬롯, 보조룬: 선택된 룬 전체) */
-        <div className="grid grid-cols-1 gap-6 rounded-card border border-base-border bg-base-surface p-4 md:grid-cols-2">
-          <div className="space-y-4">
-            <RuneSlotRow stats={keystoneStats} />
-            <RuneSlotRow stats={primarySlot1Stats} />
-            <RuneSlotRow stats={primarySlot2Stats} />
-            <RuneSlotRow stats={primarySlot3Stats} />
-            <p className="text-center text-xs text-text-faint">주 룬트리</p>
-          </div>
-          <div className="space-y-4">
-            <RuneSlotRow stats={secondaryRuneStats} />
-            <p className="text-center text-xs text-text-faint">보조 룬트리</p>
-          </div>
-        </div>
-      )}
-
-      <p className="mt-2 text-xs text-text-faint">
-        * 능력치 파편(스탯 샤드)은 아직 수집하고 있지 않아 이번 화면에는 포함되지 않았어요.
-      </p>
+      {loading ? (
+        <p className="text-sm text-text-muted">불러오는 중...</p>
+      ) : error ? (
+        <p className="text-sm text-accent-loss">{error}</p>
+      ) : detail ? (
+        <RunePageDetailView detail={detail} />
+      ) : null}
     </div>
   );
 }
