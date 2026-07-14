@@ -116,6 +116,9 @@ export interface RuneOption {
   rune_id: number;
   icon_url: string | null;
   chosen: boolean;
+  games: number;
+  win_rate: number;
+  pick_rate: number;
 }
 
 export interface RuneRow {

@@ -241,8 +241,6 @@ async def get_champion_rune_page_detail(
     주 룬트리는 4줄(키스톤+3슬롯) 전부, 보조 룬트리는 실제로 고른 3개 줄
     중 2개 줄만 표시 대상이 된다.
     """
-    from collections import Counter
-
     query = select(MatchParticipant).where(MatchParticipant.champion_id == champion_id)
     if position:
         query = query.where(MatchParticipant.team_position == position)
@@ -278,47 +276,72 @@ async def get_champion_rune_page_detail(
     if not filtered:
         return None
 
-    # 주 룬트리: 4줄 전부, 각 줄에서 가장 많이 선택된 룬을 "선택됨"으로 표시
+    # 주 룬트리: 4줄 전부, 각 줄의 모든 옵션에 승률/픽률/게임수를 계산하고
+    # 가장 많이 선택된 룬을 "선택됨"으로 표시
+    total_games = len(filtered)
     primary_structure = ddragon.get_rune_tree_structure(primary_style)
     primary_rows: list[dict] = []
     for row_idx, row_rune_ids in enumerate(primary_structure):
-        picks = []
+        groups = {rid: {"games": 0, "wins": 0} for rid in row_rune_ids}
         for r in filtered:
             runes = r.runes or {}
             if row_idx == 0:
-                picks.append(runes.get("keystone"))
+                pick = runes.get("keystone")
             else:
                 primary_runes = runes.get("primary_runes", [])
-                picks.append(primary_runes[row_idx] if len(primary_runes) > row_idx else None)
-        picks = [p for p in picks if p is not None]
-        chosen_id = Counter(picks).most_common(1)[0][0] if picks else None
-        primary_rows.append(
-            {
-                "options": [
-                    {"rune_id": rid, "icon_url": ddragon.rune_icon_url(rid), "chosen": rid == chosen_id}
-                    for rid in row_rune_ids
-                ]
-            }
-        )
+                pick = primary_runes[row_idx] if len(primary_runes) > row_idx else None
+            if pick in groups:
+                groups[pick]["games"] += 1
+                if r.win:
+                    groups[pick]["wins"] += 1
 
-    # 보조 룬트리: 키스톤 줄(0번)은 보조에서 고를 수 없으니 제외. 실제로
-    # 가장 많이 선택된 룬 2개가 속한 줄만 "선택됨" 표시.
+        options = []
+        for rid in row_rune_ids:
+            g = groups[rid]
+            options.append(
+                {
+                    "rune_id": rid,
+                    "icon_url": ddragon.rune_icon_url(rid),
+                    "games": g["games"],
+                    "win_rate": round(g["wins"] / g["games"] * 100, 1) if g["games"] else 0.0,
+                    "pick_rate": round(g["games"] / total_games * 100, 1) if total_games else 0.0,
+                }
+            )
+        chosen_id = max(options, key=lambda o: o["games"])["rune_id"] if options else None
+        for o in options:
+            o["chosen"] = o["games"] > 0 and o["rune_id"] == chosen_id
+        primary_rows.append({"options": options})
+
+    # 보조 룬트리: 키스톤 줄(0번)은 보조에서 고를 수 없으니 제외. 각 줄의
+    # 모든 옵션에 승률/픽률/게임수를 계산하고, 실제로 가장 많이 선택된
+    # 룬 2개가 속한 줄만 "선택됨" 표시.
     sub_structure = ddragon.get_rune_tree_structure(sub_style)[1:]
-    all_secondary_picks: list[int] = []
+    secondary_pick_games: dict[int, dict] = {}
     for r in filtered:
-        all_secondary_picks.extend((r.runes or {}).get("secondary_runes", []))
-    top2 = {rid for rid, _ in Counter(all_secondary_picks).most_common(2)}
+        for rid in (r.runes or {}).get("secondary_runes", []):
+            g = secondary_pick_games.setdefault(rid, {"games": 0, "wins": 0})
+            g["games"] += 1
+            if r.win:
+                g["wins"] += 1
+    top2 = sorted(secondary_pick_games.items(), key=lambda kv: kv[1]["games"], reverse=True)[:2]
+    top2_ids = {rid for rid, _ in top2}
 
     secondary_rows: list[dict] = []
     for row_rune_ids in sub_structure:
-        secondary_rows.append(
-            {
-                "options": [
-                    {"rune_id": rid, "icon_url": ddragon.rune_icon_url(rid), "chosen": rid in top2}
-                    for rid in row_rune_ids
-                ]
-            }
-        )
+        options = []
+        for rid in row_rune_ids:
+            g = secondary_pick_games.get(rid, {"games": 0, "wins": 0})
+            options.append(
+                {
+                    "rune_id": rid,
+                    "icon_url": ddragon.rune_icon_url(rid),
+                    "games": g["games"],
+                    "win_rate": round(g["wins"] / g["games"] * 100, 1) if g["games"] else 0.0,
+                    "pick_rate": round(g["games"] / total_games * 100, 1) if total_games else 0.0,
+                    "chosen": rid in top2_ids,
+                }
+            )
+        secondary_rows.append({"options": options})
 
     all_style_ids = ddragon.all_rune_style_ids()
     return {

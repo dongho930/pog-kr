@@ -19,6 +19,9 @@ class RuneOptionOut(BaseModel):
     rune_id: int
     icon_url: str | None
     chosen: bool
+    games: int
+    win_rate: float
+    pick_rate: float
 
 
 class RuneRowOut(BaseModel):

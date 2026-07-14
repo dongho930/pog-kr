@@ -2,22 +2,33 @@ import { ChampionRunePageDetail, RuneOption, RuneRow } from "@/lib/api";
 
 function OptionIcon({ option, size = "h-10 w-10" }: { option: RuneOption; size?: string }) {
   return (
-    <div
-      className={`${size} overflow-hidden rounded-full border ${
-        option.chosen
-          ? "border-accent-gold bg-base-elevated"
-          : "border-base-border bg-base-elevated grayscale opacity-40"
-      }`}
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      {option.icon_url && <img src={option.icon_url} alt="" className="h-full w-full object-cover" />}
+    <div className="flex w-14 flex-col items-center gap-1">
+      <div
+        className={`${size} overflow-hidden rounded-full border transition ${
+          option.chosen
+            ? "border-accent-gold bg-base-elevated"
+            : "border-base-border bg-base-elevated brightness-[0.45] opacity-90"
+        }`}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {option.icon_url && (
+          <img src={option.icon_url} alt="" className="h-full w-full object-cover" />
+        )}
+      </div>
+      <p className="font-mono text-[11px] font-bold text-yellow-400">
+        {option.win_rate.toFixed(1)}%
+      </p>
+      <p className="font-mono text-[10px] font-semibold text-accent-win">
+        {option.pick_rate.toFixed(1)}%
+      </p>
+      <p className="font-mono text-[10px] text-text-faint">{option.games.toLocaleString()}</p>
     </div>
   );
 }
 
 function Row({ row, size }: { row: RuneRow; size?: string }) {
   return (
-    <div className="flex justify-center gap-3">
+    <div className="flex justify-center gap-2">
       {row.options.map((opt, i) => (
         <OptionIcon key={i} option={opt} size={size} />
       ))}
@@ -39,10 +50,10 @@ function StyleIconRow({
       {styleIds.map((id) => (
         <div
           key={id}
-          className={`h-9 w-9 overflow-hidden rounded-full border ${
+          className={`h-9 w-9 overflow-hidden rounded-full border transition ${
             id === activeStyleId
               ? "border-accent-gold bg-base-elevated"
-              : "border-base-border bg-base-elevated grayscale opacity-40"
+              : "border-base-border bg-base-elevated brightness-[0.45] opacity-90"
           }`}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -57,8 +68,10 @@ export function RunePageDetailView({ detail }: { detail: ChampionRunePageDetail 
   return (
     <div className="rounded-card border border-base-border bg-base-surface p-5">
       <p className="mb-4 text-center text-xs text-text-faint">
-        이 조합으로 수집된 매치 {detail.games}경기 기준 — 실제 클라이언트 룬 페이지처럼, 이
-        조합에서 가장 많이 선택된 룬만 색이 있고 나머지는 흑백으로 표시돼요.
+        이 조합으로 수집된 매치 {detail.games}경기 기준 — 선택된 룬은 밝게, 선택 안 된 룬은
+        어둡게 표시돼요. 숫자는 위에서부터{" "}
+        <span className="text-yellow-400">승률</span> ·{" "}
+        <span className="text-accent-win">픽률</span> · 게임 수예요.
       </p>
 
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
@@ -69,7 +82,7 @@ export function RunePageDetailView({ detail }: { detail: ChampionRunePageDetail 
             iconUrls={detail.all_style_icon_urls}
             activeStyleId={detail.primary_style}
           />
-          <div className="mt-4 space-y-4">
+          <div className="mt-4 space-y-5">
             {detail.primary_rows.map((row, i) => (
               <Row key={i} row={row} size={i === 0 ? "h-11 w-11" : "h-9 w-9"} />
             ))}
@@ -84,7 +97,7 @@ export function RunePageDetailView({ detail }: { detail: ChampionRunePageDetail 
             iconUrls={detail.all_style_icon_urls}
             activeStyleId={detail.sub_style}
           />
-          <div className="mt-4 space-y-4">
+          <div className="mt-4 space-y-5">
             {detail.secondary_rows.map((row, i) => (
               <Row key={i} row={row} size="h-9 w-9" />
             ))}
