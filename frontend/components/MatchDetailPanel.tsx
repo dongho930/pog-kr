@@ -165,14 +165,18 @@ function ParticipantRow({
 
       <td className="whitespace-nowrap p-1.5">
         <div className="rounded border border-base-border px-1.5 py-0.5">
-          <Link
-            href={summonerHref(p.game_name, p.tag_line)}
-            onClick={(e) => e.stopPropagation()}
-            className="text-text-primary hover:underline"
-          >
-            {p.game_name || "(알 수 없음)"}
-            <span className="text-text-faint">#{p.tag_line}</span>
-          </Link>
+          {p.game_name && p.tag_line ? (
+            <Link
+              href={summonerHref(p.game_name, p.tag_line)}
+              onClick={(e) => e.stopPropagation()}
+              className="text-text-primary hover:underline"
+            >
+              {p.game_name}
+              <span className="text-text-faint">#{p.tag_line}</span>
+            </Link>
+          ) : (
+            <p className="text-text-primary">{p.game_name || "(알 수 없음)"}</p>
+          )}
           <p className={`text-xs ${tierColorClass(rank?.tier ?? null)}`}>
             {rank ? formatRank(rank.tier, rank.rank) : "불러오는 중..."}
           </p>
@@ -473,9 +477,13 @@ export function MatchDetailPanel({ matchId, viewedPuuid }: { matchId: string; vi
               {[...blue, ...red].map((p) => (
                 <tr key={p.puuid} className="bg-base-surface">
                   <td className="rounded-l-card px-2 py-1.5 text-text-primary">
-                    <Link href={summonerHref(p.game_name, p.tag_line)} className="hover:underline">
-                      {p.game_name}#{p.tag_line}
-                    </Link>
+                    {p.game_name && p.tag_line ? (
+                      <Link href={summonerHref(p.game_name, p.tag_line)} className="hover:underline">
+                        {p.game_name}#{p.tag_line}
+                      </Link>
+                    ) : (
+                      p.game_name || "(알 수 없음)"
+                    )}
                   </td>
                   <td className="px-2 py-1.5 font-mono text-text-muted">
                     {killParticipationOf(p, p.team_id === 100 ? totalKillsBlue : totalKillsRed)}%

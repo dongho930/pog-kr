@@ -34,8 +34,10 @@ export function SummonerCard({
       <div className="mt-5 flex items-center justify-between rounded-md bg-base-elevated px-4 py-3">
         <div className="flex items-center gap-3">
           {emblemUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={emblemUrl} alt="" className="h-24 w-24 shrink-0 object-contain" />
+            <div className="h-24 w-24 shrink-0 overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={emblemUrl} alt="" className="h-full w-full scale-150 object-contain" />
+            </div>
           )}
           <div>
             <p className="text-xs uppercase tracking-wide text-text-faint">솔로랭크</p>
