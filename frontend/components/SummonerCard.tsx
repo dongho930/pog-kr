@@ -2,6 +2,49 @@ import { Summoner } from "@/lib/api";
 import { FormStreak } from "./FormStreak";
 import { tierEmblemUrl } from "@/lib/rankIcons";
 
+function RankBlock({
+  label,
+  tier,
+  rank,
+  lp,
+  wins,
+  losses,
+}: {
+  label: string;
+  tier: string | null;
+  rank: string | null;
+  lp: number;
+  wins: number;
+  losses: number;
+}) {
+  const total = wins + losses;
+  const winRate = total ? Math.round((wins / total) * 1000) / 10 : 0;
+  const emblemUrl = tierEmblemUrl(tier);
+
+  return (
+    <div className="rounded-md bg-base-elevated px-4 py-2">
+      <div className="flex flex-col items-center text-center">
+        {emblemUrl && (
+          <div className="h-36 w-36 shrink-0 overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={emblemUrl} alt="" className="h-full w-full scale-[2.6] object-contain" />
+          </div>
+        )}
+        <p className="text-xs uppercase tracking-wide text-text-faint">{label}</p>
+        <p className="font-display font-semibold text-accent-gold">
+          {tier ? `${tier} ${rank ?? ""}` : "Unranked"}
+        </p>
+        {tier && <p className="mt-0.5 font-mono text-sm text-text-primary">{lp} LP</p>}
+      </div>
+      {total > 0 && (
+        <div className="mt-3 flex items-center justify-center border-t border-base-border pt-2 font-mono text-xs text-text-muted">
+          {winRate}% ({total}전)
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function SummonerCard({
   summoner,
   recentForm,
@@ -9,10 +52,6 @@ export function SummonerCard({
   summoner: Summoner;
   recentForm: boolean[];
 }) {
-  const total = summoner.solo_wins + summoner.solo_losses;
-  const winRate = total ? Math.round((summoner.solo_wins / total) * 1000) / 10 : 0;
-  const emblemUrl = tierEmblemUrl(summoner.solo_tier);
-
   return (
     <div className="rounded-card border border-base-border bg-base-surface p-5">
       <div className="flex items-center gap-4">
@@ -31,27 +70,27 @@ export function SummonerCard({
         </div>
       </div>
 
-      <div className="mt-5 rounded-md bg-base-elevated px-4 py-2">
-        <div className="flex flex-col items-center text-center">
-          {emblemUrl && (
-            <div className="h-36 w-36 shrink-0 overflow-hidden">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={emblemUrl} alt="" className="h-full w-full scale-[2.6] object-contain" />
-            </div>
-          )}
-          <p className="text-xs uppercase tracking-wide text-text-faint">솔로랭크</p>
-          <p className="font-display font-semibold text-accent-gold">
-            {summoner.solo_tier ?? "언랭크"} {summoner.solo_rank ?? ""}
-          </p>
-          <p className="mt-0.5 font-mono text-sm text-text-primary">{summoner.solo_lp} LP</p>
-        </div>
-        <div className="mt-3 flex items-center justify-center border-t border-base-border pt-2 font-mono text-xs text-text-muted">
-          {winRate}% ({total}전)
-        </div>
+      <div className="mt-5 space-y-3">
+        <RankBlock
+          label="솔로랭크"
+          tier={summoner.solo_tier}
+          rank={summoner.solo_rank}
+          lp={summoner.solo_lp}
+          wins={summoner.solo_wins}
+          losses={summoner.solo_losses}
+        />
+        <RankBlock
+          label="자유랭크"
+          tier={summoner.flex_tier}
+          rank={summoner.flex_rank}
+          lp={summoner.flex_lp}
+          wins={summoner.flex_wins}
+          losses={summoner.flex_losses}
+        />
       </div>
 
       <div className="mt-4 flex items-center justify-between">
-        <span className="text-xs text-text-faint">최근 폼</span>
+        <span className="text-xs text-text-faint">최근 전적</span>
         <FormStreak results={recentForm} />
       </div>
     </div>

@@ -13,6 +13,11 @@ export interface Summoner {
   solo_lp: number;
   solo_wins: number;
   solo_losses: number;
+  flex_tier: string | null;
+  flex_rank: string | null;
+  flex_lp: number;
+  flex_wins: number;
+  flex_losses: number;
 }
 
 export interface ItemTimelineEntry {

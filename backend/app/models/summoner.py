@@ -25,6 +25,12 @@ class Summoner(Base):
     solo_wins: Mapped[int] = mapped_column(Integer, default=0)
     solo_losses: Mapped[int] = mapped_column(Integer, default=0)
 
+    flex_tier: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    flex_rank: Mapped[str | None] = mapped_column(String(5), nullable=True)
+    flex_lp: Mapped[int] = mapped_column(Integer, default=0)
+    flex_wins: Mapped[int] = mapped_column(Integer, default=0)
+    flex_losses: Mapped[int] = mapped_column(Integer, default=0)
+
     last_updated: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )

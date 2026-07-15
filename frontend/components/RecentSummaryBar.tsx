@@ -50,10 +50,12 @@ export function RecentSummaryBar({ matches, puuid }: { matches: Match[]; puuid: 
   const r = 20;
   const circumference = 2 * Math.PI * r;
   const dashOffset = circumference * (1 - winRate / 100);
+  const resultColor = winRate >= 50 ? "#35C48F" : "#E5555A";
+  const resultColorClass = winRate >= 50 ? "text-accent-win" : "text-accent-loss";
 
   return (
     <div className="mb-4 flex flex-wrap items-center gap-6 rounded-card border border-base-border bg-base-surface px-5 py-3.5">
-      <p className="font-mono text-sm font-bold text-sky-400">
+      <p className={`font-mono text-sm font-bold ${resultColorClass}`}>
         {games}전 {wins}승 {losses}패
       </p>
 
@@ -66,14 +68,14 @@ export function RecentSummaryBar({ matches, puuid }: { matches: Match[]; puuid: 
               cy="26"
               r={r}
               fill="none"
-              stroke="#38bdf8"
+              stroke={resultColor}
               strokeWidth="5"
               strokeLinecap="round"
               strokeDasharray={circumference}
               strokeDashoffset={dashOffset}
             />
           </g>
-          <text x="26" y="26" textAnchor="middle" dominantBaseline="central" fill="#38bdf8" fontSize="13" fontWeight="700">
+          <text x="26" y="26" textAnchor="middle" dominantBaseline="central" fill={resultColor} fontSize="13" fontWeight="700">
             {winRate}%
           </text>
         </svg>
@@ -92,13 +94,18 @@ export function RecentSummaryBar({ matches, puuid }: { matches: Match[]; puuid: 
         <div className="flex items-center gap-4">
           {topChampions.map((c, i) => {
             const pickRate = Math.round((c.games / games) * 100);
+            const champWinRate = Math.round((c.wins / c.games) * 100);
+            const champResultClass = champWinRate >= 50 ? "text-accent-win" : "text-accent-loss";
             const kda = c.deaths === 0 ? c.kills + c.assists : (c.kills + c.assists) / c.deaths;
             return (
               <div key={i} className="flex items-center gap-1.5">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={c.icon} alt="" className="h-9 w-9 rounded-md bg-base-elevated object-cover" />
                 <div>
-                  <p className="font-mono text-xs font-semibold text-accent-gold">{pickRate}%</p>
+                  <p className="font-mono text-xs font-semibold text-accent-gold">픽률 {pickRate}%</p>
+                  <p className={`font-mono text-[11px] font-semibold ${champResultClass}`}>
+                    승률 {champWinRate}%
+                  </p>
                   <p className="text-[11px] text-text-muted">
                     {c.wins}승 {c.losses}패
                   </p>

@@ -69,6 +69,10 @@ async def get_summoner(
         (entry for entry in league_entries if entry.get("queueType") == "RANKED_SOLO_5x5"),
         None,
     )
+    flex = next(
+        (entry for entry in league_entries if entry.get("queueType") == "RANKED_FLEX_SR"),
+        None,
+    )
 
     data = {
         "puuid": account["puuid"],
@@ -82,6 +86,11 @@ async def get_summoner(
         "solo_lp": solo["leaguePoints"] if solo else 0,
         "solo_wins": solo["wins"] if solo else 0,
         "solo_losses": solo["losses"] if solo else 0,
+        "flex_tier": flex["tier"] if flex else None,
+        "flex_rank": flex["rank"] if flex else None,
+        "flex_lp": flex["leaguePoints"] if flex else 0,
+        "flex_wins": flex["wins"] if flex else 0,
+        "flex_losses": flex["losses"] if flex else 0,
     }
 
     try:

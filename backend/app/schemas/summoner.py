@@ -19,6 +19,12 @@ class SummonerOut(BaseModel):
     solo_wins: int
     solo_losses: int
 
+    flex_tier: str | None
+    flex_rank: str | None
+    flex_lp: int
+    flex_wins: int
+    flex_losses: int
+
     @computed_field
     @property
     def profile_icon_url(self) -> str:
@@ -28,3 +34,8 @@ class SummonerOut(BaseModel):
     def solo_win_rate(self) -> float:
         total = self.solo_wins + self.solo_losses
         return round(self.solo_wins / total * 100, 1) if total else 0.0
+
+    @property
+    def flex_win_rate(self) -> float:
+        total = self.flex_wins + self.flex_losses
+        return round(self.flex_wins / total * 100, 1) if total else 0.0
