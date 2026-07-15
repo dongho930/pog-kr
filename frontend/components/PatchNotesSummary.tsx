@@ -29,9 +29,7 @@ export async function PatchNotesSummary() {
           v{data.patch} 챔피언 밸런싱
         </h2>
         <a
-          href={data.patch_notes_url}
-          target="_blank"
-          rel="noopener noreferrer"
+          href="/patch-notes"
           className="rounded-full bg-base-surface px-4 py-1.5 text-sm font-semibold text-text-primary hover:bg-base-elevated"
         >
           패치 노트 →
