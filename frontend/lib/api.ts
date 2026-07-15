@@ -265,6 +265,7 @@ export interface ProPlayerLive {
   team: string | null;
   found: boolean;
   puuid?: string;
+  profile_icon_url?: string;
   tier?: string | null;
   rank?: string | null;
   summoner_level?: number;
@@ -277,6 +278,41 @@ export interface ProPlayerLive {
     platform_id: string;
     encryption_key: string;
   };
+}
+
+export interface LiveGameDetailParticipant {
+  puuid: string;
+  game_name: string;
+  tag_line: string;
+  team_id: number;
+  champion_id: number;
+  champion_icon_url: string;
+  spell1_icon_url: string | null;
+  spell2_icon_url: string | null;
+  keystone_icon_url: string | null;
+  primary_style_icon_url: string | null;
+  sub_style_icon_url: string | null;
+  profile_icon_url: string | null;
+  summoner_level: number | null;
+  tier: string | null;
+  rank: string | null;
+  lp: number;
+  season_wins: number;
+  season_losses: number;
+  champion_games: number;
+  champion_win_rate: number | null;
+  champion_kda: number | null;
+  champion_kills: number | null;
+  champion_deaths: number | null;
+  champion_assists: number | null;
+}
+
+export interface LiveGameDetail {
+  in_game: boolean;
+  queue_label?: string;
+  map_label?: string;
+  game_length_seconds?: number;
+  participants?: LiveGameDetailParticipant[];
 }
 
 export const api = {
@@ -294,6 +330,8 @@ export const api = {
       `/summoners/${encodeURIComponent(puuid)}/rank-history?queue=${queue}&days=${days}`
     ),
   getProPlayers: () => apiFetch<ProPlayerLive[]>(`/pro-players`),
+  getLiveGameDetail: (puuid: string) =>
+    apiFetch<LiveGameDetail>(`/summoners/${encodeURIComponent(puuid)}/live-detail`),
   getMatchHistory: (puuid: string, count = 20) =>
     apiFetch<Match[]>(`/summoners/${puuid}/matches?count=${count}`),
   getMatchDetail: (matchId: string) => apiFetch<Match>(`/matches/${matchId}`),

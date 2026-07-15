@@ -50,11 +50,20 @@ async def list_pro_players(db: AsyncSession = Depends(get_db)):
 
         entry["puuid"] = puuid
 
+        try:
+            summoner_info = await riot_api.get_summoner_by_puuid(puuid)
+            entry["profile_icon_url"] = ddragon.profile_icon_url(summoner_info.get("profileIconId", 0))
+            entry["summoner_level"] = summoner_info.get("summonerLevel")
+        except riot_api.RiotAPIError:
+            cached = await crud_summoner.get_by_puuid(db, puuid)
+            if cached:
+                entry["profile_icon_url"] = ddragon.profile_icon_url(cached.profile_icon_id)
+                entry["summoner_level"] = cached.summoner_level
+
         cached = await crud_summoner.get_by_puuid(db, puuid)
         if cached:
             entry["tier"] = cached.solo_tier
             entry["rank"] = cached.solo_rank
-            entry["summoner_level"] = cached.summoner_level
 
         try:
             game = await riot_api.get_active_game(puuid)

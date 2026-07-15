@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { ProPlayerLive } from "@/lib/api";
+import { api, LiveGameDetail, ProPlayerLive } from "@/lib/api";
 import { tierEmblemUrl } from "@/lib/rankIcons";
+import { LiveGameDetailPanel } from "@/components/LiveGameDetailPanel";
 
 const TIER_KOREAN: Record<string, string> = {
   IRON: "아이언",
@@ -103,6 +104,24 @@ function ProPlayerCard({
 }) {
   const emblemUrl = tierEmblemUrl(player.tier ?? null);
   const self = player.participants?.find((p) => p.puuid === player.puuid);
+  const [detail, setDetail] = useState<LiveGameDetail | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
+
+  async function handleToggle() {
+    onToggle();
+    if (expanded || detail || !player.puuid) return; // 이미 열려있거나 이미 불러왔으면 재요청 안 함
+    setLoadingDetail(true);
+    setDetailError(null);
+    try {
+      const result = await api.getLiveGameDetail(player.puuid);
+      setDetail(result);
+    } catch (e) {
+      setDetailError(e instanceof Error ? e.message : "인게임 정보를 불러오지 못했어요.");
+    } finally {
+      setLoadingDetail(false);
+    }
+  }
 
   return (
     <div className="rounded-card border border-base-border bg-base-surface p-4">
@@ -110,7 +129,7 @@ function ProPlayerCard({
         <div className="relative h-12 w-12 shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={self?.champion_icon_url ?? "/positions/utility.svg"}
+            src={self?.champion_icon_url ?? player.profile_icon_url ?? "/positions/utility.svg"}
             alt=""
             className="h-12 w-12 rounded-full border border-base-border bg-base-elevated object-cover"
           />
@@ -159,7 +178,7 @@ function ProPlayerCard({
         <>
           <button
             type="button"
-            onClick={onToggle}
+            onClick={handleToggle}
             className="mt-3 w-full rounded-md border border-base-border py-1.5 text-xs font-semibold text-text-primary hover:bg-base-elevated"
           >
             {expanded ? "인게임 정보 닫기" : "인게임 정보 / 관전 정보 보기"}
@@ -167,38 +186,17 @@ function ProPlayerCard({
 
           {expanded && (
             <div className="mt-3 space-y-3">
-              {player.participants && (
-                <div className="grid grid-cols-2 gap-2">
-                  {[100, 200].map((teamId) => (
-                    <div key={teamId}>
-                      <p
-                        className={`mb-1 text-[10px] font-semibold uppercase ${
-                          teamId === 100 ? "text-blue-400" : "text-accent-loss"
-                        }`}
-                      >
-                        {teamId === 100 ? "블루팀" : "레드팀"}
-                      </p>
-                      <ul className="space-y-0.5">
-                        {player.participants!
-                          .filter((pp) => pp.team_id === teamId)
-                          .map((pp) => (
-                            <li
-                              key={pp.puuid}
-                              className="flex items-center gap-1.5 text-[11px] text-text-muted"
-                            >
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={pp.champion_icon_url}
-                                alt=""
-                                className="h-4 w-4 rounded-full bg-base-elevated object-cover"
-                              />
-                              <span className="truncate">{pp.game_name}</span>
-                            </li>
-                          ))}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
+              {loadingDetail && (
+                <p className="py-4 text-center text-xs text-text-muted">불러오는 중...</p>
+              )}
+              {detailError && <p className="py-2 text-center text-xs text-accent-loss">{detailError}</p>}
+              {detail && detail.in_game && detail.participants && (
+                <LiveGameDetailPanel
+                  queueLabel={detail.queue_label}
+                  mapLabel={detail.map_label}
+                  gameLengthSeconds={detail.game_length_seconds}
+                  participants={detail.participants}
+                />
               )}
 
               {player.spectate && (

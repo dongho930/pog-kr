@@ -24,8 +24,7 @@ from app.crud import crud_pro_player  # noqa: E402
 
 # (게임명, 태그, 실명/알려진 이름, 소속팀) — 예시 placeholder이므로 실제 값으로 교체할 것.
 PRO_PLAYERS: list[tuple[str, str, str, str | None]] = [
-    ("Hide on bush", "KR1", "Faker", "T1"),
-    ("Ghost", "올라갑니다", "Ghost", "Kt")
+    ("SamplePro", "KR1", "예시 선수 (실제 계정으로 교체하세요)", "예시팀"),
 ]
 
 
