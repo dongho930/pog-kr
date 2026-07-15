@@ -1,4 +1,5 @@
 import { SearchBar } from "@/components/SearchBar";
+import { PatchNotesSummary } from "@/components/PatchNotesSummary";
 
 export default function HomePage() {
   return (
@@ -17,6 +18,10 @@ export default function HomePage() {
       <p className="mt-3 text-xs text-text-faint">
         게임명#태그 형식으로 검색하세요 (예: Hide on bush#KR1)
       </p>
+
+      <div className="mt-10 w-full max-w-4xl">
+        <PatchNotesSummary />
+      </div>
     </div>
   );
 }

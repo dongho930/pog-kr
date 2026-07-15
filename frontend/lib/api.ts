@@ -226,6 +226,20 @@ async function apiFetch<T>(path: string): Promise<T> {
   return res.json();
 }
 
+export interface PatchNoteChampion {
+  champion_id: number;
+  champion_name: string;
+  icon_url: string;
+  change_type: "buff" | "nerf" | "new" | "adjustment";
+}
+
+export interface PatchNoteSummary {
+  patch: string;
+  patch_notes_url: string;
+  champions: PatchNoteChampion[];
+  error: string | null;
+}
+
 export const api = {
   getSummoner: (region: string, gameName: string, tagLine: string) =>
     apiFetch<Summoner>(
@@ -235,6 +249,7 @@ export const api = {
     apiFetch<{ game_name: string; tag_line: string }>(
       `/summoners/by-puuid/${encodeURIComponent(puuid)}/riot-id`
     ),
+  getLatestPatchNotes: () => apiFetch<PatchNoteSummary>(`/patch-notes/latest`),
   getMatchHistory: (puuid: string, count = 20) =>
     apiFetch<Match[]>(`/summoners/${puuid}/matches?count=${count}`),
   getMatchDetail: (matchId: string) => apiFetch<Match>(`/matches/${matchId}`),

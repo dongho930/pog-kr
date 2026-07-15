@@ -9,6 +9,7 @@ Riot 공식 Data Dragon에서 챔피언 ID -> 한글 이름 매핑을 가져오�
 import httpx
 
 _NAME_CACHE: dict[int, str] | None = None
+_EN_NAME_TO_ID_CACHE: dict[str, int] | None = None
 _VERSION_CACHE: str | None = None
 _SPELL_ICON_CACHE: dict[int, str] | None = None
 _RUNE_ICON_CACHE: dict[int, str] | None = None
@@ -38,6 +39,10 @@ def _champion_ko_url(version: str) -> str:
     return f"https://ddragon.leagueoflegends.com/cdn/{version}/data/ko_KR/champion.json"
 
 
+def _champion_en_url(version: str) -> str:
+    return f"https://ddragon.leagueoflegends.com/cdn/{version}/data/en_US/champion.json"
+
+
 async def get_champion_name_map() -> dict[int, str]:
     """챔피언 숫자 ID -> 한글 이름 (예: 103 -> "아리"). Data Dragon 공식 데이터 사용."""
     global _NAME_CACHE
@@ -56,6 +61,30 @@ async def get_champion_name_map() -> dict[int, str]:
         _NAME_CACHE = {}
 
     return _NAME_CACHE
+
+
+async def get_champion_id_map_en() -> dict[str, int]:
+    """영문 챔피언 이름(Data Dragon 표기, 예: "Kai'Sa") -> 숫자 ID.
+
+    공식 영문 위키(wiki.leagueoflegends.com)가 이 표기를 그대로 쓰기 때문에,
+    패치노트 스크래핑에서 챔피언 이름 매칭용으로 사용한다.
+    """
+    global _EN_NAME_TO_ID_CACHE
+    if _EN_NAME_TO_ID_CACHE is not None:
+        return _EN_NAME_TO_ID_CACHE
+
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(_champion_en_url(_current_version()), timeout=10.0)
+            resp.raise_for_status()
+            data = resp.json()
+        _EN_NAME_TO_ID_CACHE = {
+            champ["name"]: int(champ["key"]) for champ in data.get("data", {}).values()
+        }
+    except (httpx.HTTPError, ValueError, KeyError):
+        _EN_NAME_TO_ID_CACHE = {}
+
+    return _EN_NAME_TO_ID_CACHE
 
 
 async def get_champion_name(champion_id: int) -> str:
