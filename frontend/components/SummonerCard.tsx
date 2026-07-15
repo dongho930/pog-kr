@@ -24,13 +24,13 @@ function RankBlock({
   return (
     <div className="rounded-md bg-base-elevated px-4 py-2">
       <div className="flex flex-col items-center text-center">
+        <p className="text-sm font-bold text-text-primary">{label}</p>
         {emblemUrl && (
-          <div className="h-36 w-36 shrink-0 overflow-hidden">
+          <div className="h-32 w-32 shrink-0 overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={emblemUrl} alt="" className="h-full w-full scale-[2.6] object-contain" />
+            <img src={emblemUrl} alt="" className="h-full w-full scale-[3.1] object-contain" />
           </div>
         )}
-        <p className="text-xs uppercase tracking-wide text-text-faint">{label}</p>
         <p className="font-display font-semibold text-accent-gold">
           {tier ? `${tier} ${rank ?? ""}` : "Unranked"}
         </p>

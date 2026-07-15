@@ -1,4 +1,4 @@
-import { Match } from "@/lib/api";
+import { api, Match } from "@/lib/api";
 import { SummonerNameLink } from "./SummonerNameLink";
 
 interface TeammateRow {
@@ -16,7 +16,7 @@ interface TeammateRow {
  * 팀(team_id 동일)이었던 경우만 집계하고, 같이 플레이한 게임 수 내림차순으로
  * 정렬한다.
  */
-export function TeammatesSection({ matches, puuid }: { matches: Match[]; puuid: string }) {
+export async function TeammatesSection({ matches, puuid }: { matches: Match[]; puuid: string }) {
   const byPuuid = new Map<string, TeammateRow>();
 
   for (const m of matches) {
@@ -53,42 +53,63 @@ export function TeammatesSection({ matches, puuid }: { matches: Match[]; puuid: 
 
   if (teammates.length === 0) return null;
 
+  // 매치 기록에 태그가 비어 있는 팀원은(오래된 Riot API 응답 등) puuid로
+  // 현재 Riot ID를 역조회해서 채운다. 실패하면(탈퇴 계정 등) 원래 값 그대로 둔다.
+  await Promise.all(
+    teammates
+      .filter((t) => !(t.gameName && t.tagLine))
+      .map(async (t) => {
+        try {
+          const resolved = await api.resolveRiotIdByPuuid(t.puuid);
+          t.gameName = resolved.game_name;
+          t.tagLine = resolved.tag_line;
+        } catch {
+          // 역조회 실패 시 그대로 둔다 (SummonerNameLink가 클릭 시 재시도함).
+        }
+      })
+  );
+
   return (
     <div className="mt-4 rounded-card border border-base-border bg-base-surface p-4">
       <h2 className="mb-3 text-sm font-semibold text-text-muted">
         최근 {matches.length}게임에서 같이 플레이한 소환사
       </h2>
-      <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-2 px-1 pb-1.5 text-xs text-text-faint">
-        <span>소환사</span>
-        <span className="text-right">승</span>
-        <span className="text-right">패</span>
-        <span className="text-right">승률</span>
-      </div>
-      <div className="space-y-1.5">
-        {teammates.map((t) => {
-          const winRate = Math.round((t.wins / t.games) * 100);
-          const resultClass = winRate >= 50 ? "text-accent-win" : "text-accent-loss";
-          return (
-            <div
-              key={t.puuid}
-              className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-2 rounded-md bg-base-elevated px-2 py-1.5 text-sm"
-            >
-              <SummonerNameLink
-                puuid={t.puuid}
-                gameName={t.gameName}
-                tagLine={t.tagLine}
-                className="truncate text-text-primary hover:underline"
-              >
-                {t.gameName || "(알 수 없음)"}
-                {t.tagLine && <span className="text-text-faint">#{t.tagLine}</span>}
-              </SummonerNameLink>
-              <span className="text-right font-mono text-accent-win">{t.wins}</span>
-              <span className="text-right font-mono text-accent-loss">{t.losses}</span>
-              <span className={`text-right font-mono font-semibold ${resultClass}`}>{winRate}%</span>
-            </div>
-          );
-        })}
-      </div>
+      <table className="w-full border-separate border-spacing-y-1.5 text-sm">
+        <thead>
+          <tr className="text-left text-xs text-text-faint">
+            <th className="px-2 pb-1 font-normal">소환사</th>
+            <th className="px-2 pb-1 text-right font-normal">승</th>
+            <th className="px-2 pb-1 text-right font-normal">패</th>
+            <th className="px-2 pb-1 text-right font-normal">승률</th>
+          </tr>
+        </thead>
+        <tbody>
+          {teammates.map((t) => {
+            const winRate = Math.round((t.wins / t.games) * 100);
+            const resultClass = winRate >= 50 ? "text-accent-win" : "text-accent-loss";
+            return (
+              <tr key={t.puuid} className="bg-base-elevated">
+                <td className="rounded-l-md px-2 py-1.5">
+                  <SummonerNameLink
+                    puuid={t.puuid}
+                    gameName={t.gameName}
+                    tagLine={t.tagLine}
+                    className="truncate text-text-primary hover:underline"
+                  >
+                    {t.gameName || "(알 수 없음)"}
+                    {t.tagLine && <span className="text-text-faint">#{t.tagLine}</span>}
+                  </SummonerNameLink>
+                </td>
+                <td className="px-2 py-1.5 text-right font-mono text-text-muted">{t.wins}</td>
+                <td className="px-2 py-1.5 text-right font-mono text-text-muted">{t.losses}</td>
+                <td className={`rounded-r-md px-2 py-1.5 text-right font-mono font-semibold ${resultClass}`}>
+                  {winRate}%
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }
