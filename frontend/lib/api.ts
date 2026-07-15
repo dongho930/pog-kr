@@ -240,6 +240,14 @@ export interface PatchNoteSummary {
   error: string | null;
 }
 
+export interface RankHistoryPoint {
+  date: string;
+  tier: string | null;
+  rank: string | null;
+  lp: number;
+  score: number;
+}
+
 export const api = {
   getSummoner: (region: string, gameName: string, tagLine: string) =>
     apiFetch<Summoner>(
@@ -250,6 +258,10 @@ export const api = {
       `/summoners/by-puuid/${encodeURIComponent(puuid)}/riot-id`
     ),
   getLatestPatchNotes: () => apiFetch<PatchNoteSummary>(`/patch-notes/latest`),
+  getRankHistory: (puuid: string, queue: "solo" | "flex" = "solo", days = 60) =>
+    apiFetch<RankHistoryPoint[]>(
+      `/summoners/${encodeURIComponent(puuid)}/rank-history?queue=${queue}&days=${days}`
+    ),
   getMatchHistory: (puuid: string, count = 20) =>
     apiFetch<Match[]>(`/summoners/${puuid}/matches?count=${count}`),
   getMatchDetail: (matchId: string) => apiFetch<Match>(`/matches/${matchId}`),

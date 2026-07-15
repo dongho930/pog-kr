@@ -2,6 +2,7 @@ import { api } from "@/lib/api";
 import { SummonerCard } from "@/components/SummonerCard";
 import { RecentSummaryBar } from "@/components/RecentSummaryBar";
 import { TeammatesSection } from "@/components/TeammatesSection";
+import { RankHistoryChart } from "@/components/RankHistoryChart";
 import { MatchHistorySection } from "@/components/MatchHistorySection";
 import { LiveGameBanner } from "@/components/LiveGameBanner";
 import { ChampionStatsSection } from "@/components/ChampionStatsSection";
@@ -43,9 +44,10 @@ export default async function SummonerProfilePage({
     matchesError = e instanceof Error ? e.message : "매치 히스토리를 불러오지 못했습니다.";
   }
 
-  const [liveGame, championStats] = await Promise.all([
+  const [liveGame, championStats, rankHistory] = await Promise.all([
     api.getLiveGame(summoner.puuid).catch(() => ({ in_game: false, participants: [] })),
     api.getChampionStatsBySummoner(summoner.puuid).catch(() => []),
+    api.getRankHistory(summoner.puuid, "solo").catch(() => []),
   ]);
 
   const recentForm = matches
@@ -57,6 +59,7 @@ export default async function SummonerProfilePage({
     <div className="grid grid-cols-1 gap-6 md:grid-cols-[280px_1fr]">
       <aside>
         <SummonerCard summoner={summoner} recentForm={recentForm} />
+        <RankHistoryChart history={rankHistory} />
         <TeammatesSection matches={matches} puuid={summoner.puuid} />
       </aside>
 
