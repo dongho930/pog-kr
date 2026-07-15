@@ -200,7 +200,6 @@ function ProPlayerCard({
                   gameLengthSeconds={detail.game_length_seconds}
                   participants={detail.participants}
                   bans={detail.bans}
-                  spectate={player.spectate}
                 />
               )}
             </Modal>

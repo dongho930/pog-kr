@@ -141,8 +141,15 @@ function TeamTable({
 
               <div className="flex items-center gap-1.5 text-[10px] text-text-muted leading-tight">
                 {emblemUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={emblemUrl} alt="" onError={hideOnError} className="h-5 w-5 object-contain" />
+                  <div className="h-24 w-24 shrink-0 overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={emblemUrl}
+                      alt=""
+                      onError={hideOnError}
+                      className="h-full w-full scale-[2.6] object-contain"
+                    />
+                  </div>
                 )}
                 {p.tier ? (
                   <div>
@@ -198,14 +205,12 @@ export function LiveGameDetailPanel({
   gameLengthSeconds,
   participants,
   bans,
-  spectate,
 }: {
   queueLabel?: string;
   mapLabel?: string;
   gameLengthSeconds?: number;
   participants: LiveGameDetailParticipant[];
   bans?: Record<string, string[]>;
-  spectate?: { game_id: number; platform_id: string; encryption_key: string };
 }) {
   const blueTeam = participants.filter((p) => p.team_id === 100);
   const redTeam = participants.filter((p) => p.team_id === 200);
@@ -224,19 +229,6 @@ export function LiveGameDetailPanel({
       <div className="max-h-[88vh] space-y-3 overflow-y-auto p-3.5">
         <TeamTable team={blueTeam} label="블루팀" color="text-blue-400" bans={bans?.["100"]} />
         <TeamTable team={redTeam} label="레드팀" color="text-accent-loss" bans={bans?.["200"]} />
-
-        {spectate && (
-          <div className="rounded-md bg-base-elevated p-3 text-xs text-text-faint">
-            <p className="mb-1 font-semibold text-text-muted">관전 정보 (고급 사용자용)</p>
-            <p>게임 ID: {spectate.game_id}</p>
-            <p>플랫폼: {spectate.platform_id}</p>
-            <p className="truncate">암호화 키: {spectate.encryption_key}</p>
-            <p className="mt-1.5">
-              이 정보는 League 클라이언트로 직접 관전할 때 필요한 값이에요. 브라우저에서 바로
-              재생되진 않고, 클라이언트 버전에 따라 연결 방법이 달라질 수 있어요.
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );
