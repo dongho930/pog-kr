@@ -132,7 +132,10 @@ function ParticipantRow({
 
   return (
     <tr
-      onClick={() => onSelectBuild(p.puuid)}
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest("[data-no-row-click]")) return;
+        onSelectBuild(p.puuid);
+      }}
       className={`cursor-pointer text-sm transition hover:bg-base-surface ${
         isViewed ? "bg-base-surface/60" : ""
       }`}
@@ -161,12 +164,11 @@ function ParticipantRow({
       </td>
 
       <td className="whitespace-nowrap p-1.5">
-        <div className="rounded border border-base-border px-1.5 py-0.5">
+        <div className="rounded border border-base-border px-1.5 py-0.5" data-no-row-click>
           <SummonerNameLink
             puuid={p.puuid}
             gameName={gameName}
             tagLine={tagLine}
-            stopPropagation
             className="text-text-primary hover:underline"
           >
             {gameName || "(알 수 없음)"}

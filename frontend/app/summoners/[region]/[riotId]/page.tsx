@@ -57,7 +57,7 @@ export default async function SummonerProfilePage({
         <SummonerCard summoner={summoner} recentForm={recentForm} />
       </aside>
 
-      <section>
+      <section className="min-w-0">
         <TabNav
           matchesContent={
             matchesError ? (

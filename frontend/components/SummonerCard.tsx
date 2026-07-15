@@ -31,26 +31,22 @@ export function SummonerCard({
         </div>
       </div>
 
-      <div className="mt-5 rounded-md bg-base-elevated px-4 py-3">
-        <div className="flex items-center gap-3">
+      <div className="mt-5 rounded-md bg-base-elevated px-4 py-4">
+        <div className="flex flex-col items-center text-center">
           {emblemUrl && (
-            <div className="h-20 w-20 shrink-0 overflow-hidden">
+            <div className="h-[200px] w-[200px] shrink-0 overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={emblemUrl} alt="" className="h-full w-full scale-150 object-contain" />
             </div>
           )}
-          <div className="min-w-0">
-            <p className="text-xs uppercase tracking-wide text-text-faint">솔로랭크</p>
-            <p className="truncate font-display text-sm font-semibold leading-tight text-accent-gold">
-              {summoner.solo_tier ?? "언랭크"} {summoner.solo_rank ?? ""}
-            </p>
-          </div>
-        </div>
-        <div className="mt-3 flex items-center justify-between border-t border-base-border pt-2 font-mono">
-          <p className="text-sm text-text-primary">{summoner.solo_lp} LP</p>
-          <p className="text-xs text-text-muted">
-            {winRate}% ({total}전)
+          <p className="text-xs uppercase tracking-wide text-text-faint">솔로랭크</p>
+          <p className="font-display font-semibold text-accent-gold">
+            {summoner.solo_tier ?? "언랭크"} {summoner.solo_rank ?? ""}
           </p>
+          <p className="mt-0.5 font-mono text-sm text-text-primary">{summoner.solo_lp} LP</p>
+        </div>
+        <div className="mt-3 flex items-center justify-center border-t border-base-border pt-2 font-mono text-xs text-text-muted">
+          {winRate}% ({total}전)
         </div>
       </div>
 
