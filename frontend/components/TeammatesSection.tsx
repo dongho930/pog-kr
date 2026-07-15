@@ -74,9 +74,9 @@ export async function TeammatesSection({ matches, puuid }: { matches: Match[]; p
       <h2 className="mb-3 text-sm font-semibold text-text-muted">
         최근 {matches.length}게임에서 같이 플레이한 소환사
       </h2>
-      <table className="w-full border-separate border-spacing-y-1.5 text-sm">
+      <table className="w-full border-separate border-spacing-y-1.5 text-xs">
         <thead>
-          <tr className="text-left text-xs text-text-faint">
+          <tr className="text-left text-[11px] text-text-faint">
             <th className="whitespace-nowrap px-2 pb-1 font-normal">소환사</th>
             <th className="whitespace-nowrap px-2 pb-1 text-right font-normal">승</th>
             <th className="whitespace-nowrap px-2 pb-1 text-right font-normal">패</th>
@@ -94,7 +94,7 @@ export async function TeammatesSection({ matches, puuid }: { matches: Match[]; p
                     puuid={t.puuid}
                     gameName={t.gameName}
                     tagLine={t.tagLine}
-                    className="truncate text-text-faint hover:underline"
+                    className="truncate text-text-muted hover:underline"
                   >
                     {t.gameName || "(알 수 없음)"}
                     {t.tagLine && <span>#{t.tagLine}</span>}
@@ -107,7 +107,7 @@ export async function TeammatesSection({ matches, puuid }: { matches: Match[]; p
                   {t.losses}
                 </td>
                 <td
-                  className={`whitespace-nowrap rounded-r-md px-2 py-1.5 text-right font-mono font-semibold ${resultClass}`}
+                  className={`whitespace-nowrap rounded-r-md py-1.5 pl-2 pr-3 text-right font-mono font-semibold ${resultClass}`}
                 >
                   {winRate}%
                 </td>
