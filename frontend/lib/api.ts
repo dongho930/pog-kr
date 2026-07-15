@@ -327,6 +327,7 @@ export interface LiveGameDetail {
   map_label?: string;
   game_length_seconds?: number;
   participants?: LiveGameDetailParticipant[];
+  bans?: Record<string, string[]>;
 }
 
 export const api = {

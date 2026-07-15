@@ -160,10 +160,21 @@ async def get_live_game_detail(puuid: str, db: AsyncSession = Depends(get_db)):
         await _attach_champion_stats(db, result)
 
     queue_id = game.get("gameQueueConfigId")
+
+    bans: dict[str, list[str]] = {"100": [], "200": []}
+    for ban in game.get("bannedChampions", []):
+        champion_id = ban.get("championId", -1)
+        if champion_id <= 0:  # -1 = 밴 안 함
+            continue
+        team_key = str(ban.get("teamId"))
+        if team_key in bans:
+            bans[team_key].append(ddragon.champion_icon_url(champion_id))
+
     return {
         "in_game": True,
         "queue_label": QUEUE_LABELS.get(queue_id, f"큐 {queue_id}"),
         "map_label": MAP_LABELS.get(game.get("mapId"), "소환사의 협곡"),
         "game_length_seconds": game.get("gameLength"),
         "participants": list(participants),
+        "bans": {100: bans["100"], 200: bans["200"]},
     }
