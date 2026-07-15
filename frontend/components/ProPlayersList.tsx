@@ -4,6 +4,7 @@ import { useState } from "react";
 import { api, LiveGameDetail, ProPlayerLive } from "@/lib/api";
 import { tierEmblemUrl } from "@/lib/rankIcons";
 import { LiveGameDetailPanel } from "@/components/LiveGameDetailPanel";
+import { Modal } from "@/components/Modal";
 
 const TIER_KOREAN: Record<string, string> = {
   IRON: "아이언",
@@ -181,37 +182,27 @@ function ProPlayerCard({
             onClick={handleToggle}
             className="mt-3 w-full rounded-md border border-base-border py-1.5 text-xs font-semibold text-text-primary hover:bg-base-elevated"
           >
-            {expanded ? "인게임 정보 닫기" : "인게임 정보 / 관전 정보 보기"}
+            인게임 정보 / 관전 정보 보기
           </button>
 
           {expanded && (
-            <div className="mt-3 space-y-3">
+            <Modal onClose={onToggle}>
               {loadingDetail && (
-                <p className="py-4 text-center text-xs text-text-muted">불러오는 중...</p>
+                <p className="p-10 text-center text-sm text-text-muted">불러오는 중...</p>
               )}
-              {detailError && <p className="py-2 text-center text-xs text-accent-loss">{detailError}</p>}
+              {detailError && (
+                <p className="p-10 text-center text-sm text-accent-loss">{detailError}</p>
+              )}
               {detail && detail.in_game && detail.participants && (
                 <LiveGameDetailPanel
                   queueLabel={detail.queue_label}
                   mapLabel={detail.map_label}
                   gameLengthSeconds={detail.game_length_seconds}
                   participants={detail.participants}
+                  spectate={player.spectate}
                 />
               )}
-
-              {player.spectate && (
-                <div className="rounded-md bg-base-elevated p-2.5 text-[11px] text-text-faint">
-                  <p className="mb-1 font-semibold text-text-muted">관전 정보 (고급 사용자용)</p>
-                  <p>게임 ID: {player.spectate.game_id}</p>
-                  <p>플랫폼: {player.spectate.platform_id}</p>
-                  <p className="truncate">암호화 키: {player.spectate.encryption_key}</p>
-                  <p className="mt-1.5 text-text-faint">
-                    이 정보는 League 클라이언트로 직접 관전할 때 필요한 값이에요. 브라우저에서
-                    바로 재생되진 않고, 클라이언트 버전에 따라 연결 방법이 달라질 수 있어요.
-                  </p>
-                </div>
-              )}
-            </div>
+            </Modal>
           )}
         </>
       )}
