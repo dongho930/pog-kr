@@ -29,6 +29,10 @@ function teamTierAverage(team: LiveGameDetailParticipant[]): string {
   return TIER_KOREAN[top] ?? top;
 }
 
+function summonerHref(gameName: string, tagLine: string): string {
+  return `/summoners/kr/${encodeURIComponent(gameName)}-${encodeURIComponent(tagLine)}`;
+}
+
 function TeamTable({
   team,
   label,
@@ -52,7 +56,7 @@ function TeamTable({
             <span className="text-[11px] text-text-faint">밴</span>
             {bans.map((url, i) => (
               // eslint-disable-next-line @next/next/no-img-element
-              <img key={i} src={url} alt="" className="h-4 w-4 rounded bg-base-elevated grayscale" />
+              <img key={i} src={url} alt="" className="h-7 w-7 rounded bg-base-elevated grayscale" />
             ))}
           </div>
         )}
@@ -98,10 +102,19 @@ function TeamTable({
                 ))}
               </div>
               <div className="min-w-0">
-                <p className="truncate text-xs font-semibold text-text-primary">
-                  {p.game_name}
-                  <span className="text-text-faint"> #{p.tag_line}</span>
-                </p>
+                {p.game_name && p.tag_line ? (
+                  <a
+                    href={summonerHref(p.game_name, p.tag_line)}
+                    className="truncate text-xs font-semibold text-text-primary hover:underline"
+                  >
+                    {p.game_name}
+                    <span className="text-text-faint"> #{p.tag_line}</span>
+                  </a>
+                ) : (
+                  <p className="truncate text-xs font-semibold text-text-primary">
+                    {p.game_name || "(알 수 없음)"}
+                  </p>
+                )}
                 <p className="text-[10px] text-text-faint">Lv.{p.summoner_level ?? "-"}</p>
               </div>
             </div>
@@ -139,7 +152,8 @@ function TeamTable({
                   </p>
                   <p>
                     <span className="text-accent-win">{p.champion_kda?.toFixed(2)}:1</span> ·{" "}
-                    {p.champion_kills}/{p.champion_deaths}/{p.champion_assists}
+                    {p.champion_kills?.toFixed(1)}/{p.champion_deaths?.toFixed(1)}/
+                    {p.champion_assists?.toFixed(1)}
                   </p>
                 </>
               ) : (
@@ -149,7 +163,7 @@ function TeamTable({
 
             <div className="flex gap-0.5">
               {[p.keystone_icon_url, p.sub_style_icon_url].map((url, i) => (
-                <div key={i} className="h-5 w-5 overflow-hidden rounded-full bg-base-surface">
+                <div key={i} className="h-6 w-6 overflow-hidden rounded-full bg-base-surface">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   {url && <img src={url} alt="" className="h-full w-full object-cover" />}
                 </div>
