@@ -1,5 +1,6 @@
 import { api } from "@/lib/api";
 import { SummonerCard } from "@/components/SummonerCard";
+import { RecentSummaryBar } from "@/components/RecentSummaryBar";
 import { MatchHistorySection } from "@/components/MatchHistorySection";
 import { LiveGameBanner } from "@/components/LiveGameBanner";
 import { ChampionStatsSection } from "@/components/ChampionStatsSection";
@@ -58,6 +59,7 @@ export default async function SummonerProfilePage({
       </aside>
 
       <section className="min-w-0">
+        <RecentSummaryBar matches={matches} puuid={summoner.puuid} />
         <TabNav
           matchesContent={
             matchesError ? (
