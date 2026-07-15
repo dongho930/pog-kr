@@ -248,6 +248,37 @@ export interface RankHistoryPoint {
   score: number;
 }
 
+export interface ProPlayerParticipant {
+  puuid: string;
+  champion_id: number;
+  champion_icon_url: string;
+  team_id: number;
+  game_name: string;
+  tag_line: string;
+}
+
+export interface ProPlayerLive {
+  id: number;
+  game_name: string;
+  tag_line: string;
+  real_name: string;
+  team: string | null;
+  found: boolean;
+  puuid?: string;
+  tier?: string | null;
+  rank?: string | null;
+  summoner_level?: number;
+  in_game: boolean;
+  game_mode?: string;
+  game_length_seconds?: number;
+  participants?: ProPlayerParticipant[];
+  spectate?: {
+    game_id: number;
+    platform_id: string;
+    encryption_key: string;
+  };
+}
+
 export const api = {
   getSummoner: (region: string, gameName: string, tagLine: string) =>
     apiFetch<Summoner>(
@@ -262,6 +293,7 @@ export const api = {
     apiFetch<RankHistoryPoint[]>(
       `/summoners/${encodeURIComponent(puuid)}/rank-history?queue=${queue}&days=${days}`
     ),
+  getProPlayers: () => apiFetch<ProPlayerLive[]>(`/pro-players`),
   getMatchHistory: (puuid: string, count = 20) =>
     apiFetch<Match[]>(`/summoners/${puuid}/matches?count=${count}`),
   getMatchDetail: (matchId: string) => apiFetch<Match>(`/matches/${matchId}`),

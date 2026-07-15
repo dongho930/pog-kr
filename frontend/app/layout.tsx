@@ -30,6 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <a href="/leaderboard" className="hover:text-text-primary">랭킹</a>
               <a href="/tier-list" className="hover:text-text-primary">챔피언 티어</a>
               <a href="/patch-notes" className="hover:text-text-primary">패치 노트</a>
+              <a href="/pro-players" className="hover:text-text-primary">프로 관전</a>
               <a href="/" className="hover:text-text-primary">소환사 검색</a>
             </nav>
           </div>
