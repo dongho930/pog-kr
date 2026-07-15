@@ -211,8 +211,22 @@ export interface LiveGame {
   }[];
 }
 
-async function apiFetch<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, { cache: "no-store" });
+async function apiFetch<T>(path: string, timeoutMs = 15000): Promise<T> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, { cache: "no-store", signal: controller.signal });
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") {
+      throw new Error("서버 응답이 너무 오래 걸려요. 잠시 후 다시 시도해주세요.");
+    }
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
+
   if (!res.ok) {
     let detail = "";
     try {
@@ -331,7 +345,7 @@ export const api = {
     ),
   getProPlayers: () => apiFetch<ProPlayerLive[]>(`/pro-players`),
   getLiveGameDetail: (puuid: string) =>
-    apiFetch<LiveGameDetail>(`/summoners/${encodeURIComponent(puuid)}/live-detail`),
+    apiFetch<LiveGameDetail>(`/summoners/${encodeURIComponent(puuid)}/live-detail`, 25000),
   getMatchHistory: (puuid: string, count = 20) =>
     apiFetch<Match[]>(`/summoners/${puuid}/matches?count=${count}`),
   getMatchDetail: (matchId: string) => apiFetch<Match>(`/matches/${matchId}`),

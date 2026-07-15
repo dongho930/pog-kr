@@ -54,12 +54,11 @@ async def get_live_game(puuid: str):
     )
 
 
-async def _enrich_participant(db: AsyncSession, p: dict) -> dict:
+async def _fetch_riot_data(sem: asyncio.Semaphore, p: dict) -> dict:
     """
-    스펙테이터 API가 주는 기본 정보(챔피언/스펠/룬)에 더해, 참가자별로
-    소환사 레벨/티어/이번 시즌 이 챔피언 전적까지 추가로 조회한다.
-    참가자 한 명당 Riot API를 2번(소환사, 리그) 더 부르기 때문에 10명이면
-    호출이 꽤 늘어난다 — 실패해도 그 참가자만 부분적으로 비워두고 계속 진행.
+    참가자 한 명의 Riot API 데이터(소환사 레벨/티어)만 조회한다. DB에는
+    손대지 않으므로 여러 명을 동시에(asyncio.gather) 조회해도 안전하다.
+    다만 Riot 요청 제한에 걸리지 않도록 세마포어로 동시 실행 개수를 제한한다.
     """
     puuid = p["puuid"]
     champion_id = p["championId"]
@@ -93,28 +92,34 @@ async def _enrich_participant(db: AsyncSession, p: dict) -> dict:
         "champion_assists": None,
     }
 
-    try:
-        summoner_info = await riot_api.get_summoner_by_puuid(puuid)
-        result["profile_icon_url"] = ddragon.profile_icon_url(summoner_info.get("profileIconId", 0))
-        result["summoner_level"] = summoner_info.get("summonerLevel")
-    except riot_api.RiotAPIError:
-        pass
+    async with sem:
+        try:
+            summoner_info = await riot_api.get_summoner_by_puuid(puuid)
+            result["profile_icon_url"] = ddragon.profile_icon_url(summoner_info.get("profileIconId", 0))
+            result["summoner_level"] = summoner_info.get("summonerLevel")
+        except Exception:
+            logger.warning("참가자 소환사 정보 조회 실패 (puuid=%s)", puuid, exc_info=True)
 
-    try:
-        league_entries = await riot_api.get_league_entries(puuid)
-        solo = next((e for e in league_entries if e.get("queueType") == "RANKED_SOLO_5x5"), None)
-        if solo:
-            result["tier"] = solo["tier"]
-            result["rank"] = solo["rank"]
-            result["lp"] = solo["leaguePoints"]
-            result["season_wins"] = solo["wins"]
-            result["season_losses"] = solo["losses"]
-    except riot_api.RiotAPIError:
-        pass
+        try:
+            league_entries = await riot_api.get_league_entries(puuid)
+            solo = next((e for e in league_entries if e.get("queueType") == "RANKED_SOLO_5x5"), None)
+            if solo:
+                result["tier"] = solo["tier"]
+                result["rank"] = solo["rank"]
+                result["lp"] = solo["leaguePoints"]
+                result["season_wins"] = solo["wins"]
+                result["season_losses"] = solo["losses"]
+        except Exception:
+            logger.warning("참가자 리그 정보 조회 실패 (puuid=%s)", puuid, exc_info=True)
 
+    return result
+
+
+async def _attach_champion_stats(db: AsyncSession, result: dict) -> None:
+    """DB 조회는 세션을 공유하므로 반드시 한 번에 하나씩(순차) 호출할 것."""
     try:
-        champ_stats = await crud_champion.get_champion_stats_for_puuid(db, puuid)
-        stat = next((s for s in champ_stats if s["champion_id"] == champion_id), None)
+        champ_stats = await crud_champion.get_champion_stats_for_puuid(db, result["puuid"])
+        stat = next((s for s in champ_stats if s["champion_id"] == result["champion_id"]), None)
         if stat:
             result["champion_games"] = stat["games"]
             result["champion_win_rate"] = stat["win_rate"]
@@ -123,9 +128,7 @@ async def _enrich_participant(db: AsyncSession, p: dict) -> dict:
             result["champion_deaths"] = stat["deaths"]
             result["champion_assists"] = stat["assists"]
     except Exception:
-        logger.exception("챔피언 통계 조회 실패 (puuid=%s)", puuid)
-
-    return result
+        logger.exception("챔피언 통계 조회 실패 (puuid=%s)", result["puuid"])
 
 
 @router.get("/summoners/{puuid}/live-detail")
@@ -134,6 +137,11 @@ async def get_live_game_detail(puuid: str, db: AsyncSession = Depends(get_db)):
     관전/인게임 정보 패널용 상세 데이터. 기본 /live 엔드포인트보다 훨씬
     무겁다(참가자 10명 각각 추가 조회) — 목록에서는 쓰지 말고, 사용자가
     실제로 "인게임 정보 보기"를 눌렀을 때만 호출할 것.
+
+    Riot API 조회는 세마포어로 동시 실행 개수를 제한해 동시에(asyncio.gather)
+    처리하지만, DB 조회는 세션을 공유하기 때문에 반드시 순차적으로 처리한다
+    (비동기 세션을 여러 코루틴이 동시에 쓰면 요청이 응답 없이 멈출 수 있음 —
+    실제로 이 문제 때문에 프론트에서 "Failed to fetch"가 발생했었다).
     """
     try:
         game = await riot_api.get_active_game(puuid)
@@ -143,9 +151,13 @@ async def get_live_game_detail(puuid: str, db: AsyncSession = Depends(get_db)):
     if game is None:
         return {"in_game": False}
 
+    sem = asyncio.Semaphore(4)
     participants = await asyncio.gather(
-        *[_enrich_participant(db, p) for p in game.get("participants", [])]
+        *[_fetch_riot_data(sem, p) for p in game.get("participants", [])]
     )
+
+    for result in participants:
+        await _attach_champion_stats(db, result)
 
     queue_id = game.get("gameQueueConfigId")
     return {
