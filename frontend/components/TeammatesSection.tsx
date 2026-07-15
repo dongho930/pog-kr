@@ -77,10 +77,10 @@ export async function TeammatesSection({ matches, puuid }: { matches: Match[]; p
       <table className="w-full border-separate border-spacing-y-1.5 text-sm">
         <thead>
           <tr className="text-left text-xs text-text-faint">
-            <th className="px-2 pb-1 font-normal">소환사</th>
-            <th className="px-2 pb-1 text-right font-normal">승</th>
-            <th className="px-2 pb-1 text-right font-normal">패</th>
-            <th className="px-2 pb-1 text-right font-normal">승률</th>
+            <th className="whitespace-nowrap px-2 pb-1 font-normal">소환사</th>
+            <th className="whitespace-nowrap px-2 pb-1 text-right font-normal">승</th>
+            <th className="whitespace-nowrap px-2 pb-1 text-right font-normal">패</th>
+            <th className="whitespace-nowrap px-2 pb-1 text-right font-normal">승률</th>
           </tr>
         </thead>
         <tbody>
@@ -89,20 +89,26 @@ export async function TeammatesSection({ matches, puuid }: { matches: Match[]; p
             const resultClass = winRate >= 50 ? "text-accent-win" : "text-accent-loss";
             return (
               <tr key={t.puuid} className="bg-base-elevated">
-                <td className="rounded-l-md px-2 py-1.5">
+                <td className="whitespace-nowrap rounded-l-md px-2 py-1.5">
                   <SummonerNameLink
                     puuid={t.puuid}
                     gameName={t.gameName}
                     tagLine={t.tagLine}
-                    className="truncate text-text-primary hover:underline"
+                    className="truncate text-text-faint hover:underline"
                   >
                     {t.gameName || "(알 수 없음)"}
-                    {t.tagLine && <span className="text-text-faint">#{t.tagLine}</span>}
+                    {t.tagLine && <span>#{t.tagLine}</span>}
                   </SummonerNameLink>
                 </td>
-                <td className="px-2 py-1.5 text-right font-mono text-text-muted">{t.wins}</td>
-                <td className="px-2 py-1.5 text-right font-mono text-text-muted">{t.losses}</td>
-                <td className={`rounded-r-md px-2 py-1.5 text-right font-mono font-semibold ${resultClass}`}>
+                <td className="whitespace-nowrap px-2 py-1.5 text-right font-mono text-text-muted">
+                  {t.wins}
+                </td>
+                <td className="whitespace-nowrap px-2 py-1.5 text-right font-mono text-text-muted">
+                  {t.losses}
+                </td>
+                <td
+                  className={`whitespace-nowrap rounded-r-md px-2 py-1.5 text-right font-mono font-semibold ${resultClass}`}
+                >
                   {winRate}%
                 </td>
               </tr>

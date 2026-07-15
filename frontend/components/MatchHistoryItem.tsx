@@ -69,7 +69,7 @@ export function MatchHistoryItem({ match, puuid }: { match: Match; puuid: string
       >
         {/* 결과 / 모드 / 시간 / 며칠 전 */}
         <td
-          className={`whitespace-nowrap rounded-l-card border-l-4 p-3 ${
+          className={`whitespace-nowrap rounded-l-card border-l-4 p-2 ${
             me.win ? "border-l-accent-win" : "border-l-accent-loss"
           }`}
         >
@@ -82,17 +82,17 @@ export function MatchHistoryItem({ match, puuid }: { match: Match; puuid: string
         </td>
 
         {/* 초상화 (확대) */}
-        <td className="p-3">
+        <td className="p-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={me.champion_icon_url}
             alt={`champion-${me.champion_id}`}
-            className="mx-auto h-14 w-14 rounded-md bg-base-elevated object-cover"
+            className="mx-auto h-12 w-12 rounded-md bg-base-elevated object-cover"
           />
         </td>
 
         {/* 스펠 + 룬 2x2 (스펠1/스펠2, 주룬/보조룬) */}
-        <td className="p-3">
+        <td className="p-2">
           <div className="mx-auto grid w-fit grid-cols-2 gap-0.5">
             {[me.spell1_icon_url, me.spell2_icon_url, me.keystone_icon_url, me.sub_style_icon_url].map(
               (url, i) => (
@@ -106,23 +106,23 @@ export function MatchHistoryItem({ match, puuid }: { match: Match; puuid: string
         </td>
 
         {/* KDA */}
-        <td className="whitespace-nowrap p-3">
+        <td className="whitespace-nowrap p-2">
           <p className="font-mono text-sm text-text-primary">
             {me.kills} / {me.deaths} / {me.assists}
           </p>
-          <p className={`font-mono text-base font-bold ${kdaColorClass(kdaNumber)}`}>
+          <p className={`font-mono text-sm font-bold ${kdaColorClass(kdaNumber)}`}>
             {kdaLabel} KDA
           </p>
         </td>
 
         {/* 킬관여율 */}
-        <td className="whitespace-nowrap p-3">
+        <td className="whitespace-nowrap p-2">
           <p className="text-xs text-text-faint">킬관여율</p>
-          <p className="font-mono text-base font-bold text-text-primary">{killParticipation}%</p>
+          <p className="font-mono text-sm font-bold text-text-primary">{killParticipation}%</p>
         </td>
 
         {/* CS/골드, 시야점수/제어와드 */}
-        <td className="whitespace-nowrap p-3 text-left text-xs text-text-muted">
+        <td className="whitespace-nowrap p-2 text-left text-[11px] text-text-muted">
           <p>
             <span className="font-bold text-text-primary">CS {me.cs}</span> ({csPerMin}/분) · 골드{" "}
             {me.gold_earned.toLocaleString()}
@@ -131,7 +131,7 @@ export function MatchHistoryItem({ match, puuid }: { match: Match; puuid: string
         </td>
 
         {/* 아이템: 코어 6개 + 1행 4번째 칸은 장신구(와드/렌즈 등) 전용, 2행 4번째 칸은 라인별 강조 아이템 */}
-        <td className="p-3">
+        <td className="p-2">
           <div className="mx-auto grid w-fit grid-cols-4 grid-rows-2 gap-1">
             {me.item_icon_urls.slice(0, 3).map((url, i) => (
               <div
@@ -169,7 +169,7 @@ export function MatchHistoryItem({ match, puuid }: { match: Match; puuid: string
           </div>
         </td>
 
-        <td className="rounded-r-card p-3">
+        <td className="rounded-r-card p-2">
           <ChevronIcon open={open} />
         </td>
       </tr>

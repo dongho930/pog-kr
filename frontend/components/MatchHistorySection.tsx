@@ -37,14 +37,14 @@ export function MatchHistorySection({ matches, puuid }: { matches: Match[]; puui
         <div className="overflow-x-auto">
           <table className="w-full border-separate border-spacing-y-2" style={{ tableLayout: "fixed" }}>
             <colgroup>
-              <col style={{ width: "110px" }} />
-              <col style={{ width: "80px" }} />
-              <col style={{ width: "70px" }} />
-              <col style={{ width: "110px" }} />
-              <col style={{ width: "90px" }} />
-              <col style={{ width: "220px" }} />
-              <col style={{ width: "140px" }} />
-              <col style={{ width: "40px" }} />
+              <col style={{ width: "104px" }} />
+              <col style={{ width: "64px" }} />
+              <col style={{ width: "58px" }} />
+              <col style={{ width: "100px" }} />
+              <col style={{ width: "78px" }} />
+              <col style={{ width: "175px" }} />
+              <col style={{ width: "128px" }} />
+              <col style={{ width: "32px" }} />
             </colgroup>
             <tbody>
               {filtered.map((m) => (
