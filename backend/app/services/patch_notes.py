@@ -148,14 +148,27 @@ def _patch_notes_url(version: str) -> str:
 
 
 async def _fetch_champions_wikitext(page_title: str) -> str:
-    async with httpx.AsyncClient() as client:
+    # httpx 기본 User-Agent("python-httpx/...")는 상당수 사이트에서 봇으로
+    # 간주해 차단하기 때문에, 일반 브라우저처럼 보이는 UA를 명시한다.
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (compatible; pog.kr-patchnotes/1.0; "
+            "+https://pog.kr) PatchNotesFetcher"
+        )
+    }
+
+    async with httpx.AsyncClient(headers=headers) as client:
         sections_resp = await client.get(
             WIKI_API,
             params={"action": "parse", "page": page_title, "format": "json", "prop": "sections"},
             timeout=15.0,
         )
         sections_resp.raise_for_status()
-        sections = sections_resp.json()["parse"]["sections"]
+        sections_data = sections_resp.json()
+        if "parse" not in sections_data:
+            api_error = sections_data.get("error", {}).get("info", str(sections_data)[:300])
+            raise ValueError(f"위키 API가 예상과 다른 응답을 줬습니다 (page={page_title}): {api_error}")
+        sections = sections_data["parse"]["sections"]
         champ_section = next((s for s in sections if s.get("line") == "Champions"), None)
         if champ_section is None:
             raise ValueError("위키에서 'Champions' 섹션을 찾을 수 없습니다 (문서 구조가 바뀌었을 수 있음)")
@@ -172,7 +185,11 @@ async def _fetch_champions_wikitext(page_title: str) -> str:
             timeout=15.0,
         )
         text_resp.raise_for_status()
-        return text_resp.json()["parse"]["wikitext"]["*"]
+        text_data = text_resp.json()
+        if "parse" not in text_data:
+            api_error = text_data.get("error", {}).get("info", str(text_data)[:300])
+            raise ValueError(f"위키 API가 예상과 다른 응답을 줬습니다 (wikitext 조회): {api_error}")
+        return text_data["parse"]["wikitext"]["*"]
 
 
 async def get_latest_patch_summary() -> dict:
