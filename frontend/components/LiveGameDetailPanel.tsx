@@ -87,7 +87,7 @@ function TeamTable({
           return (
             <div
               key={p.puuid}
-              className="grid grid-cols-[2fr_0.9fr_0.9fr_1.1fr] items-center gap-2 rounded-md bg-base-elevated px-2 py-1 leading-tight"
+              className="grid grid-cols-[2fr_0.9fr_0.9fr_1.1fr] items-center gap-2 rounded-md bg-base-elevated px-2 py-0.5 leading-tight"
             >
               <div className="flex items-center gap-1 overflow-hidden">
                 <div className="relative h-7 w-7 shrink-0">
@@ -142,7 +142,7 @@ function TeamTable({
               <div className="flex items-center gap-1.5 text-[10px] text-text-muted leading-tight">
                 {emblemUrl && (
                   <div className="relative h-5 w-5 shrink-0">
-                    <div className="absolute left-1/2 top-1/2 z-10 h-24 w-24 -translate-x-1/2 -translate-y-1/2 overflow-hidden">
+                    <div className="absolute left-1/2 top-1/2 z-10 h-16 w-16 -translate-x-1/2 -translate-y-1/2 overflow-hidden">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={emblemUrl}
@@ -228,7 +228,7 @@ export function LiveGameDetailPanel({
         <p className="font-mono text-sm text-text-muted">{formatDuration(gameLengthSeconds)}</p>
       </div>
 
-      <div className="max-h-[88vh] space-y-3 overflow-y-auto p-3.5">
+      <div className="space-y-2 p-3">
         <TeamTable team={blueTeam} label="블루팀" color="text-blue-400" bans={bans?.["100"]} />
         <TeamTable team={redTeam} label="레드팀" color="text-accent-loss" bans={bans?.["200"]} />
       </div>
