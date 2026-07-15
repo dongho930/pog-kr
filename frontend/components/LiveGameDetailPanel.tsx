@@ -141,14 +141,16 @@ function TeamTable({
 
               <div className="flex items-center gap-1.5 text-[10px] text-text-muted leading-tight">
                 {emblemUrl && (
-                  <div className="h-24 w-24 shrink-0 overflow-hidden">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={emblemUrl}
-                      alt=""
-                      onError={hideOnError}
-                      className="h-full w-full scale-[2.6] object-contain"
-                    />
+                  <div className="relative h-5 w-5 shrink-0">
+                    <div className="absolute left-1/2 top-1/2 z-10 h-24 w-24 -translate-x-1/2 -translate-y-1/2 overflow-hidden">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={emblemUrl}
+                        alt=""
+                        onError={hideOnError}
+                        className="h-full w-full scale-[2.6] object-contain"
+                      />
+                    </div>
                   </div>
                 )}
                 {p.tier ? (
