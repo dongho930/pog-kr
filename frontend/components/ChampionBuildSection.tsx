@@ -196,16 +196,6 @@ export function ChampionBuildSection({
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             <StatSection
-              title="신발"
-              stats={build.boots_stats}
-              renderIcons={(s) => <Icon url={s.icon_url} size="h-9 w-9" />}
-            />
-            <StatSection
-              title="장신구"
-              stats={build.trinket_stats}
-              renderIcons={(s) => <Icon url={s.icon_url} size="h-9 w-9" />}
-            />
-            <StatSection
               title="시작 아이템"
               stats={build.starting_item_stats}
               renderIcons={(s) => (
@@ -215,6 +205,16 @@ export function ChampionBuildSection({
                   ))}
                 </>
               )}
+            />
+            <StatSection
+              title="신발"
+              stats={build.boots_stats}
+              renderIcons={(s) => <Icon url={s.icon_url} size="h-9 w-9" />}
+            />
+            <StatSection
+              title="장신구"
+              stats={build.trinket_stats}
+              renderIcons={(s) => <Icon url={s.icon_url} size="h-9 w-9" />}
             />
           </div>
 
