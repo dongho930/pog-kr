@@ -4,7 +4,7 @@ import { RecentSummaryBar } from "@/components/RecentSummaryBar";
 import { TeammatesSection } from "@/components/TeammatesSection";
 import { RankHistoryChart } from "@/components/RankHistoryChart";
 import { MatchHistorySection } from "@/components/MatchHistorySection";
-import { LiveGameBanner } from "@/components/LiveGameBanner";
+import { LiveGameDetailPanel } from "@/components/LiveGameDetailPanel";
 import { ChampionStatsSection } from "@/components/ChampionStatsSection";
 import { TabNav } from "@/components/TabNav";
 
@@ -44,8 +44,10 @@ export default async function SummonerProfilePage({
     matchesError = e instanceof Error ? e.message : "매치 히스토리를 불러오지 못했습니다.";
   }
 
-  const [liveGame, championStats, rankHistory] = await Promise.all([
-    api.getLiveGame(summoner.puuid).catch(() => ({ in_game: false, participants: [] })),
+  const [liveGameDetail, championStats, rankHistory] = await Promise.all([
+    api
+      .getLiveGameDetail(summoner.puuid)
+      .catch((): Awaited<ReturnType<typeof api.getLiveGameDetail>> => ({ in_game: false })),
     api.getChampionStatsBySummoner(summoner.puuid).catch(() => []),
     api.getRankHistory(summoner.puuid, "solo").catch(() => []),
   ]);
@@ -76,7 +78,23 @@ export default async function SummonerProfilePage({
               <MatchHistorySection matches={matches} puuid={summoner.puuid} />
             )
           }
-          liveContent={<LiveGameBanner game={liveGame} />}
+          liveContent={
+            liveGameDetail.in_game && liveGameDetail.participants ? (
+              <div className="overflow-hidden rounded-card border border-base-border bg-base-surface">
+                <LiveGameDetailPanel
+                  queueLabel={liveGameDetail.queue_label}
+                  mapLabel={liveGameDetail.map_label}
+                  gameLengthSeconds={liveGameDetail.game_length_seconds}
+                  participants={liveGameDetail.participants}
+                  bans={liveGameDetail.bans}
+                />
+              </div>
+            ) : (
+              <div className="rounded-card border border-base-border bg-base-surface p-4 text-sm text-text-muted">
+                현재 게임 중이 아닙니다.
+              </div>
+            )
+          }
           championsContent={
             <ChampionStatsSection
               puuid={summoner.puuid}

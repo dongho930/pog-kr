@@ -6,7 +6,7 @@ export type TabKey = "matches" | "live" | "champions";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "matches", label: "매치 히스토리" },
-  { key: "live", label: "실시간 전적" },
+  { key: "live", label: "인게임 정보" },
   { key: "champions", label: "챔피언 통계" },
 ];
 
