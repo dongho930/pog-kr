@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { api, LiveGameDetail, ProPlayerLive } from "@/lib/api";
+import { ProPlayerLive } from "@/lib/api";
 import { tierEmblemUrl } from "@/lib/rankIcons";
-import { LiveGameDetailPanel } from "@/components/LiveGameDetailPanel";
+import { LiveTabContent } from "@/components/LiveTabContent";
 import { Modal } from "@/components/Modal";
 
 const TIER_KOREAN: Record<string, string> = {
@@ -105,24 +105,6 @@ function ProPlayerCard({
 }) {
   const emblemUrl = tierEmblemUrl(player.tier ?? null);
   const self = player.participants?.find((p) => p.puuid === player.puuid);
-  const [detail, setDetail] = useState<LiveGameDetail | null>(null);
-  const [loadingDetail, setLoadingDetail] = useState(false);
-  const [detailError, setDetailError] = useState<string | null>(null);
-
-  async function handleToggle() {
-    onToggle();
-    if (expanded || detail || !player.puuid) return; // 이미 열려있거나 이미 불러왔으면 재요청 안 함
-    setLoadingDetail(true);
-    setDetailError(null);
-    try {
-      const result = await api.getLiveGameDetail(player.puuid);
-      setDetail(result);
-    } catch (e) {
-      setDetailError(e instanceof Error ? e.message : "인게임 정보를 불러오지 못했어요.");
-    } finally {
-      setLoadingDetail(false);
-    }
-  }
 
   return (
     <div className="rounded-card border border-base-border bg-base-surface p-4">
@@ -179,29 +161,15 @@ function ProPlayerCard({
         <>
           <button
             type="button"
-            onClick={handleToggle}
+            onClick={onToggle}
             className="mt-3 w-full rounded-md border border-base-border py-1.5 text-xs font-semibold text-text-primary hover:bg-base-elevated"
           >
             인게임 정보 / 관전 정보 보기
           </button>
 
-          {expanded && (
+          {expanded && player.puuid && (
             <Modal onClose={onToggle}>
-              {loadingDetail && (
-                <p className="p-10 text-center text-sm text-text-muted">불러오는 중...</p>
-              )}
-              {detailError && (
-                <p className="p-10 text-center text-sm text-accent-loss">{detailError}</p>
-              )}
-              {detail && detail.in_game && detail.participants && (
-                <LiveGameDetailPanel
-                  queueLabel={detail.queue_label}
-                  mapLabel={detail.map_label}
-                  gameLengthSeconds={detail.game_length_seconds}
-                  participants={detail.participants}
-                  bans={detail.bans}
-                />
-              )}
+              <LiveTabContent puuid={player.puuid} />
             </Modal>
           )}
         </>

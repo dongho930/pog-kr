@@ -4,7 +4,7 @@ import { RecentSummaryBar } from "@/components/RecentSummaryBar";
 import { TeammatesSection } from "@/components/TeammatesSection";
 import { RankHistoryChart } from "@/components/RankHistoryChart";
 import { MatchHistorySection } from "@/components/MatchHistorySection";
-import { LiveGameBanner } from "@/components/LiveGameBanner";
+import { LiveTabContent } from "@/components/LiveTabContent";
 import { ChampionStatsSection } from "@/components/ChampionStatsSection";
 import { TabNav } from "@/components/TabNav";
 
@@ -44,9 +44,11 @@ export default async function SummonerProfilePage({
     matchesError = e instanceof Error ? e.message : "매치 히스토리를 불러오지 못했습니다.";
   }
 
-  // 인게임 정보(상세) 기능은 되돌리고, 가벼운 기본 실시간 전적 조회만 사용한다.
-  const [liveGame, championStats, rankHistory] = await Promise.all([
-    api.getLiveGame(summoner.puuid).catch(() => ({ in_game: false, participants: [] })),
+  // 인게임 정보(/live-detail)는 참가자 10명을 추가 조회하는 무거운 API라서
+  // 여기서 기다리지 않는다 — "실시간 전적" 탭을 실제로 열 때
+  // LiveTabContent가 브라우저에서 따로 불러온다 (프로 관전 탭과 동일한
+  // 컴포넌트를 공유하므로, 하나를 수정하면 둘 다 같이 바뀐다).
+  const [championStats, rankHistory] = await Promise.all([
     api.getChampionStatsBySummoner(summoner.puuid).catch(() => []),
     api.getRankHistory(summoner.puuid, "solo").catch(() => []),
   ]);
@@ -77,7 +79,7 @@ export default async function SummonerProfilePage({
               <MatchHistorySection matches={matches} puuid={summoner.puuid} />
             )
           }
-          liveContent={<LiveGameBanner game={liveGame} />}
+          liveContent={<LiveTabContent puuid={summoner.puuid} />}
           championsContent={
             <ChampionStatsSection
               puuid={summoner.puuid}
