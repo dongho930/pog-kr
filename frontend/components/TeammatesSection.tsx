@@ -74,48 +74,50 @@ export async function TeammatesSection({ matches, puuid }: { matches: Match[]; p
       <h2 className="mb-3 text-sm font-semibold text-text-muted">
         최근 {matches.length}게임에서 같이 플레이한 소환사
       </h2>
-      <table className="w-full border-separate border-spacing-y-1.5 text-xs">
-        <thead>
-          <tr className="text-left text-[11px] text-text-faint">
-            <th className="whitespace-nowrap px-2 pb-1 font-normal">소환사</th>
-            <th className="whitespace-nowrap px-2 pb-1 text-right font-normal">승</th>
-            <th className="whitespace-nowrap px-2 pb-1 text-right font-normal">패</th>
-            <th className="whitespace-nowrap px-2 pb-1 text-right font-normal">승률</th>
-          </tr>
-        </thead>
-        <tbody>
-          {teammates.map((t) => {
-            const winRate = Math.round((t.wins / t.games) * 100);
-            const resultClass = winRate >= 50 ? "text-accent-win" : "text-accent-loss";
-            return (
-              <tr key={t.puuid} className="bg-base-elevated">
-                <td className="whitespace-nowrap rounded-l-md px-2 py-1.5">
-                  <SummonerNameLink
-                    puuid={t.puuid}
-                    gameName={t.gameName}
-                    tagLine={t.tagLine}
-                    className="truncate text-text-muted hover:underline"
+      <div className="overflow-x-auto">
+        <table className="w-full border-separate border-spacing-y-1.5 text-xs">
+          <thead>
+            <tr className="text-left text-[11px] text-text-faint">
+              <th className="whitespace-nowrap px-2 pb-1 font-normal">소환사</th>
+              <th className="whitespace-nowrap px-2 pb-1 text-right font-normal">승</th>
+              <th className="whitespace-nowrap px-2 pb-1 text-right font-normal">패</th>
+              <th className="whitespace-nowrap px-2 pb-1 text-right font-normal">승률</th>
+            </tr>
+          </thead>
+          <tbody>
+            {teammates.map((t) => {
+              const winRate = Math.round((t.wins / t.games) * 100);
+              const resultClass = winRate >= 50 ? "text-accent-win" : "text-accent-loss";
+              return (
+                <tr key={t.puuid} className="bg-base-elevated">
+                  <td className="rounded-l-md px-2 py-1.5">
+                    <SummonerNameLink
+                      puuid={t.puuid}
+                      gameName={t.gameName}
+                      tagLine={t.tagLine}
+                      className="block max-w-[130px] truncate text-text-muted hover:underline"
+                    >
+                      {t.gameName || "(알 수 없음)"}
+                      {t.tagLine && <span>#{t.tagLine}</span>}
+                    </SummonerNameLink>
+                  </td>
+                  <td className="whitespace-nowrap px-2 py-1.5 text-right font-mono text-text-muted">
+                    {t.wins}
+                  </td>
+                  <td className="whitespace-nowrap px-2 py-1.5 text-right font-mono text-text-muted">
+                    {t.losses}
+                  </td>
+                  <td
+                    className={`whitespace-nowrap rounded-r-md py-1.5 pl-2 pr-3 text-right font-mono font-semibold ${resultClass}`}
                   >
-                    {t.gameName || "(알 수 없음)"}
-                    {t.tagLine && <span>#{t.tagLine}</span>}
-                  </SummonerNameLink>
-                </td>
-                <td className="whitespace-nowrap px-2 py-1.5 text-right font-mono text-text-muted">
-                  {t.wins}
-                </td>
-                <td className="whitespace-nowrap px-2 py-1.5 text-right font-mono text-text-muted">
-                  {t.losses}
-                </td>
-                <td
-                  className={`whitespace-nowrap rounded-r-md py-1.5 pl-2 pr-3 text-right font-mono font-semibold ${resultClass}`}
-                >
-                  {winRate}%
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                    {winRate}%
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
