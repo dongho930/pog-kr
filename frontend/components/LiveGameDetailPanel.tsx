@@ -139,10 +139,10 @@ function TeamTable({
                 </div>
               </div>
 
-              <div className="flex items-center gap-1.5 text-[10px] text-text-muted leading-tight">
+              <div className="flex items-center gap-2.5 text-[10px] text-text-muted leading-tight">
                 {emblemUrl && (
                   <div className="relative h-5 w-5 shrink-0">
-                    <div className="absolute left-1/2 top-1/2 z-10 h-16 w-16 -translate-x-1/2 -translate-y-1/2 overflow-hidden">
+                    <div className="absolute right-0 top-1/2 z-10 h-16 w-16 -translate-y-1/2 overflow-hidden">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={emblemUrl}
